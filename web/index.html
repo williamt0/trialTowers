@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Trial Towers</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #11150f; overflow: hidden; }
+  #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; cursor: default; }
+  #hint {
+    position: fixed; left: 0; right: 0; bottom: 10px; text-align: center;
+    font: 14px/1.4 system-ui, sans-serif; color: rgba(255,255,255,.55);
+    pointer-events: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hint">WASD move &nbsp;•&nbsp; mouse aim &nbsp;•&nbsp; LMB attack &nbsp;•&nbsp; RMB special &nbsp;•&nbsp; Shift dash &nbsp;•&nbsp; E talk/use &nbsp;•&nbsp; M map &nbsp;•&nbsp; Esc pause</div>
+<script src="game.js?v=251"></script>
+</body>
+</html>

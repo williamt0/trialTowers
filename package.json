@@ -1,0 +1,16 @@
+{
+  "name": "hundred-tower",
+  "productName": "The Hundred Tower",
+  "version": "0.1.0",
+  "description": "The Hundred Tower — a systemic district roguelite tower climber",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "SMOKE_TEST=1 electron ."
+  },
+  "author": "tan",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

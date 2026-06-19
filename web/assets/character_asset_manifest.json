@@ -1,0 +1,15 @@
+{
+  "generated_by": "tools/generate_character_assets.py",
+  "hero_assets_touched": false,
+  "static_assets": 122,
+  "png_files_written": 5002,
+  "idle_walk_frames_per_character": 16,
+  "attack_frames_per_character": 8,
+  "preview": "web/assets/character_asset_preview.png",
+  "groups": {
+    "npc": 57,
+    "mob": 49,
+    "champ": 4,
+    "boss": 12
+  }
+}
