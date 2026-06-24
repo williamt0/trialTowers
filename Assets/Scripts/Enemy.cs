@@ -1,91 +1,39 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class Enemy : MonoBehaviour
 {
-    public float speed = 2.2f;
-    public float sightRange = 5f;
-    public float health = 70f;
-    public float touchDamage = 12f;
+    public float hp = 30f;
+    public float speed = 2.4f;
+    public float touchDmg = 14f;     // per hit (gated by the player's i-frames so it can't stack/chip-kill)
 
     Rigidbody2D rb;
-    SpriteRenderer sr;
-    Transform player;
-    Vector2 wanderDir;
-    float wanderTimer;
-    float hitFlash;
-    float touchCooldown;
-    Color baseColor;
+    Transform target;
 
-    void Awake()
+    public void Init(Transform player)
     {
+        target = player;
         rb = GetComponent<Rigidbody2D>();
-        sr = GetComponent<SpriteRenderer>();
-        baseColor = sr.color;
-        PickWander();
-    }
-
-    void Start()
-    {
-        var p = FindObjectOfType<PlayerController>();
-        if (p) player = p.transform;
     }
 
     void FixedUpdate()
     {
-        Vector2 dir;
-        if (player != null && Vector2.Distance(rb.position, player.position) < sightRange)
-        {
-            dir = ((Vector2)player.position - rb.position).normalized; // chase
-        }
-        else
-        {
-            wanderTimer -= Time.fixedDeltaTime;
-            if (wanderTimer <= 0f) PickWander();
-            dir = wanderDir;
-        }
-        rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
-
-        // squishy bob so slimes feel alive
-        float bob = 1f + Mathf.Sin(Time.time * 8f) * 0.06f;
-        transform.localScale = new Vector3(1.1f / bob, 1f * bob, 1f);
-    }
-
-    void Update()
-    {
-        if (hitFlash > 0f)
-        {
-            hitFlash -= Time.deltaTime;
-            sr.color = Color.Lerp(baseColor, Color.white, Mathf.Clamp01(hitFlash * 6f));
-        }
-        if (touchCooldown > 0f) touchCooldown -= Time.deltaTime;
-    }
-
-    void PickWander()
-    {
-        wanderDir = Random.insideUnitCircle.normalized;
-        wanderTimer = Random.Range(1f, 2.5f);
-    }
-
-    public void TakeHit(float dmg, Vector2 knockDir)
-    {
-        health -= dmg;
-        hitFlash = 0.25f;
-        rb.position += knockDir.normalized * 0.4f;
-        if (health <= 0f)
-        {
-            GameManager.I.AddKill();
-            Destroy(gameObject);
-        }
+        if (rb == null) return;
+        if (target == null) { rb.linearVelocity = Vector2.zero; return; }
+        Vector2 to = (Vector2)target.position - rb.position;
+        float d = to.magnitude;
+        rb.linearVelocity = (d < 11f && d > 0.7f) ? to.normalized * speed : Vector2.zero;
     }
 
     void OnCollisionStay2D(Collision2D c)
     {
-        if (touchCooldown > 0f) return;
-        var pc = c.collider.GetComponent<PlayerController>();
-        if (pc != null)
-        {
-            pc.Damage(touchDamage, rb.position);
-            touchCooldown = 0.8f;
-        }
+        var p = c.collider.GetComponent<Player>();
+        if (p != null) p.Hurt(touchDmg);
+    }
+
+    public void TakeDamage(float d)
+    {
+        hp -= d;
+        if (hp <= 0f) Destroy(gameObject);
     }
 }

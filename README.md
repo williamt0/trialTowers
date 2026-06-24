@@ -90,7 +90,7 @@ topdown-rpg/
 ├── web/game.js      ← the Canvas game engine and systemic district layer
 ├── main.js          ← Electron entry point (native window wrapper)
 ├── package.json     ← npm scripts: `start`, `smoke`
-└── Assets/Scripts/  ← a separate Unity C# port (older feature set; alt native path)
+└── web/assets/      ← optional PNG art (mobs/NPCs/bosses/props); heroes are drawn in-code
 ```
 
 ## Shipping to Steam
@@ -102,9 +102,6 @@ This Electron app is a viable Steam build path for an HTML5 game:
    or [steamworks.js](https://github.com/ceifa/steamworks.js) for achievements,
    cloud saves, and the overlay.
 3. Upload builds to Steam with **SteamPipe** (`steamcmd`).
-
-> Alternative native path: the `Assets/Scripts/` Unity port. Unity exports to Steam
-> natively but is a heavier toolchain and currently lags the web version's features.
 
 ## Ideas / roadmap
 - A shop room to spend coins; rarer relics with active abilities
