@@ -8,7 +8,7 @@ public static class WorldGen
 {
     const float HW = 34f, HH = 22f;   // world half-extents
 
-    public static Vector2 Generate(Transform root, Transform player)
+    public static Vector2 Generate(Transform root, Transform player, System.Action onDescend, int floorNum)
     {
         Floor(root, Vector2.zero, new Vector2(HW * 2f + 4f, HH * 2f + 4f), new Color(0.13f, 0.12f, 0.16f), -5);
         Boundary(root);
@@ -19,11 +19,17 @@ public static class WorldGen
         float totalH = rows * roomH + (rows - 1) * gapY;
         float x0 = -totalW / 2f + roomW / 2f, y0 = -totalH / 2f + roomH / 2f;
 
+        int bossR = Random.Range(0, rows), bossC = Random.Range(0, cols);   // one room hides the gatekeeper + portal
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++)
             {
                 float rx = x0 + c * (roomW + gapX);
                 float ry = y0 + r * (roomH + gapY);
+                if (r == bossR && c == bossC)
+                {
+                    BossChamber(root, player, rx, ry, roomW - 1f, roomH - 1f, onDescend, floorNum);
+                    continue;
+                }
                 int tier = Random.value < 0.55f ? 0 : 1;                 // mostly timber, some stone
                 Floor(root, new Vector2(rx, ry), new Vector2(roomW, roomH), new Color(0.17f, 0.15f, 0.21f), -4);
                 Room(root, rx, ry, roomW - 1f, roomH - 1f, tier);
@@ -95,6 +101,26 @@ public static class WorldGen
         go.transform.SetParent(root);
         go.AddComponent<BoxCollider2D>();
         go.AddComponent<Wall>().Init(tier);
+    }
+
+    // a sealed reinforced chamber holding the dormant portal + the gatekeeper boss (the floor's objective)
+    static void BossChamber(Transform root, Transform player, float cx, float cy, float w, float h, System.Action onDescend, int floorNum)
+    {
+        Floor(root, new Vector2(cx, cy), new Vector2(w + 1f, h + 1f), new Color(0.22f, 0.13f, 0.14f), -4);
+        Room(root, cx, cy, w, h, 2);   // reinforced walls, one gate
+
+        var portalGo = SpriteFactory.Quad("Portal", new Vector2(cx, cy + 1.5f), new Vector2(1.6f, 1.6f), new Color(0.18f, 0.18f, 0.26f), 5);
+        portalGo.transform.SetParent(root);
+        var portal = portalGo.AddComponent<Portal>();
+        portal.onEnter = onDescend;
+
+        var bossGo = SpriteFactory.Quad("Boss", new Vector2(cx, cy - 2f), new Vector2(1.5f, 1.5f), new Color(0.95f, 0.55f, 0.2f), 9);
+        bossGo.transform.SetParent(root);
+        var brb = bossGo.AddComponent<Rigidbody2D>();
+        brb.gravityScale = 0f;
+        brb.freezeRotation = true;
+        bossGo.AddComponent<BoxCollider2D>();
+        bossGo.AddComponent<Boss>().Init(player, portal, floorNum);
     }
 
     static void SpawnEnemy(Transform root, Transform player, Vector2 pos)

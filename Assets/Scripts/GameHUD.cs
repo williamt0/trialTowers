@@ -5,6 +5,7 @@ using UnityEngine;
 public class GameHUD : MonoBehaviour
 {
     public Player player;
+    public int floor = 1;
 
     void OnGUI()
     {
@@ -17,20 +18,20 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
-        GUI.Label(new Rect(12, 8, 500, 22), "TRIAL TOWERS — Unity vertical slice");
+        GUI.Label(new Rect(12, 8, 600, 22), "TRIAL TOWERS — Floor " + floor);
         if (player != null)
         {
-            GUI.Label(new Rect(12, 30, 500, 22), "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp));
+            GUI.Label(new Rect(12, 30, 600, 22), "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp));
             if (player.dead)
             {
                 GUI.color = new Color(1f, 0.6f, 0.6f);
-                GUI.Label(new Rect(12, 52, 600, 22), "YOU DIED — press R to descend into a fresh floor.");
+                GUI.Label(new Rect(12, 52, 600, 22), "YOU DIED — press R to re-roll the floor.");
                 GUI.color = Color.white;
             }
             else
             {
-                GUI.Label(new Rect(12, 52, 760, 22),
-                    "WASD / arrows: move   ·   Space or LMB: attack (breaks walls, hits enemies)   ·   R: regenerate floor");
+                GUI.Label(new Rect(12, 52, 880, 22),
+                    "Find the boss chamber · beat the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · R: re-roll");
             }
         }
     }

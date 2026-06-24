@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // Entry point. Runs automatically on Play (no scene wiring needed) and builds the whole
-// slice in code: camera, player, follow + HUD, and a procedural floor. Press R to regenerate.
+// slice in code: camera, player, follow + HUD, and a procedural floor. The loop:
+// find the boss chamber -> beat the gatekeeper -> step into the portal -> descend (next floor).
 public class Bootstrap : MonoBehaviour
 {
     // False if this project's Active Input Handling is the new Input System only
@@ -14,9 +15,13 @@ public class Bootstrap : MonoBehaviour
         new GameObject("TrialTowers").AddComponent<Bootstrap>();
     }
 
+    public int floorNum = 1;
+
     GameObject worldRoot;
     Player player;
     Camera cam;
+    GameHUD hud;
+    bool descendPending;
 
     void Start()
     {
@@ -44,7 +49,7 @@ public class Bootstrap : MonoBehaviour
         player = MakePlayer();
         follow.target = player.transform;
 
-        var hud = cam.GetComponent<GameHUD>();
+        hud = cam.GetComponent<GameHUD>();
         if (hud == null) hud = cam.gameObject.AddComponent<GameHUD>();
         hud.player = player;
 
@@ -53,14 +58,19 @@ public class Bootstrap : MonoBehaviour
 
     void Update()
     {
+        // descend is queued from the portal's trigger callback, then applied here (off the physics step)
+        if (descendPending) { descendPending = false; floorNum++; Regenerate(); }
         if (InputReady && Input.GetKeyDown(KeyCode.R)) Regenerate();
     }
+
+    // called by the open portal when the player steps in
+    public void QueueDescend() { descendPending = true; }
 
     void Regenerate()
     {
         if (worldRoot != null) Destroy(worldRoot);
         worldRoot = new GameObject("World");
-        Vector2 spawn = WorldGen.Generate(worldRoot.transform, player != null ? player.transform : null);
+        Vector2 spawn = WorldGen.Generate(worldRoot.transform, player != null ? player.transform : null, QueueDescend, floorNum);
         if (player != null)
         {
             player.transform.position = new Vector3(spawn.x, spawn.y, 0f);
@@ -69,6 +79,7 @@ public class Bootstrap : MonoBehaviour
             player.hp = player.maxHp;
             player.dead = false;
         }
+        if (hud != null) hud.floor = floorNum;
     }
 
     Player MakePlayer()

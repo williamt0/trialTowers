@@ -45,7 +45,9 @@ public class Player : MonoBehaviour
             var w = h.GetComponent<Wall>();
             if (w != null) { w.TakeDamage(atkDmg * 0.6f + 8f); continue; }
             var e = h.GetComponent<Enemy>();
-            if (e != null) e.TakeDamage(atkDmg);
+            if (e != null) { e.TakeDamage(atkDmg); continue; }
+            var b = h.GetComponent<Boss>();
+            if (b != null) b.TakeDamage(atkDmg);
         }
     }
 
