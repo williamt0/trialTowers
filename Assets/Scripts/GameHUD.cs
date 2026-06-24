@@ -19,27 +19,32 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
-        GUI.Label(new Rect(12, 8, 600, 22), "TRIAL TOWERS — Floor " + floor);
+        var realm = Realms.For(floor);
+        GUI.color = new Color(0.8f, 0.8f, 0.85f);
+        GUI.Label(new Rect(12, 8, 700, 22), Realms.ActLabel(floor));
+        GUI.color = Color.white;
+        GUI.Label(new Rect(12, 28, 700, 22), "Floor " + floor + "  —  " + realm.name);
+
         if (player == null) return;
 
-        GUI.Label(new Rect(12, 30, 600, 22),
+        GUI.Label(new Rect(12, 52, 600, 22),
             "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp) + "      Coins: " + player.coins);
 
         if (player.dead)
         {
             GUI.color = new Color(1f, 0.6f, 0.6f);
-            GUI.Label(new Rect(12, 52, 600, 22), "YOU DIED — press R to re-roll the floor.");
+            GUI.Label(new Rect(12, 74, 600, 22), "YOU DIED — press R to re-roll the floor.");
             GUI.color = Color.white;
             return;
         }
 
-        GUI.Label(new Rect(12, 52, 880, 22),
+        GUI.Label(new Rect(12, 74, 900, 22),
             "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · R: re-roll");
 
         if (boot != null && boot.nearBoss)
         {
             GUI.color = new Color(1f, 0.9f, 0.6f);
-            GUI.Label(new Rect(12, 78, 760, 22), boot.parleyOpen
+            GUI.Label(new Rect(12, 98, 760, 22), boot.parleyOpen
                 ? "GATEKEEPER:   [1] Bribe (" + boot.bribeCost + "c)      [2] Challenge"
                 : "Press E — face the Gatekeeper (bribe it to pass, or fight)");
             GUI.color = Color.white;

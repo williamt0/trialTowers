@@ -21,7 +21,8 @@ public static class WorldGen
 
     public static Vector2 Generate(Transform root, Transform player, System.Action onDescend, int floorNum)
     {
-        Floor(root, Vector2.zero, new Vector2(HW * 2f + 4f, HH * 2f + 4f), new Color(0.13f, 0.12f, 0.16f), -5);
+        var realm = Realms.For(floorNum);
+        Floor(root, Vector2.zero, new Vector2(HW * 2f + 4f, HH * 2f + 4f), realm.ground, -5);
         Boundary(root);
 
         int cols = 3, rows = 2;
@@ -32,8 +33,8 @@ public static class WorldGen
         float ax1 = x0 + roomW / 2f + gapX / 2f;   // vertical alley lane between columns 0 and 1
         float ax2 = ax1 + (roomW + gapX);          // between columns 1 and 2
 
-        // a warm-stone street grid threading the alleys (above the base floor, in the gaps so it never paves a room)
-        Color road = new Color(0.29f, 0.27f, 0.23f);
+        // a street grid threading the alleys (above the base floor, in the gaps so it never paves a room)
+        Color road = realm.road;
         float rw = 3.2f;
         Floor(root, new Vector2(0f, 0f), new Vector2(HW * 2f - 3f, rw), road, -3);    // horizontal spine through the central alley
         Floor(root, new Vector2(ax1, 0f), new Vector2(rw, HH * 2f - 4f), road, -3);   // vertical lane 1
