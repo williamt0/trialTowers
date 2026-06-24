@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
     public float hp = 100f, maxHp = 100f;
     public float atkRange = 1.7f, atkDmg = 30f, atkCd = 0.30f;
     public bool dead;
+    public int coins;
 
     Rigidbody2D rb;
     Vector2 face = Vector2.down;

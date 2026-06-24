@@ -34,6 +34,10 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(float d)
     {
         hp -= d;
-        if (hp <= 0f) Destroy(gameObject);
+        if (hp <= 0f)
+        {
+            if (target != null) { var p = target.GetComponent<Player>(); if (p != null) p.coins += 5; }
+            Destroy(gameObject);
+        }
     }
 }

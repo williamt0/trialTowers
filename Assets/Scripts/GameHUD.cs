@@ -5,6 +5,7 @@ using UnityEngine;
 public class GameHUD : MonoBehaviour
 {
     public Player player;
+    public Bootstrap boot;
     public int floor = 1;
 
     void OnGUI()
@@ -19,20 +20,29 @@ public class GameHUD : MonoBehaviour
         }
 
         GUI.Label(new Rect(12, 8, 600, 22), "TRIAL TOWERS — Floor " + floor);
-        if (player != null)
+        if (player == null) return;
+
+        GUI.Label(new Rect(12, 30, 600, 22),
+            "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp) + "      Coins: " + player.coins);
+
+        if (player.dead)
         {
-            GUI.Label(new Rect(12, 30, 600, 22), "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp));
-            if (player.dead)
-            {
-                GUI.color = new Color(1f, 0.6f, 0.6f);
-                GUI.Label(new Rect(12, 52, 600, 22), "YOU DIED — press R to re-roll the floor.");
-                GUI.color = Color.white;
-            }
-            else
-            {
-                GUI.Label(new Rect(12, 52, 880, 22),
-                    "Find the boss chamber · beat the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · R: re-roll");
-            }
+            GUI.color = new Color(1f, 0.6f, 0.6f);
+            GUI.Label(new Rect(12, 52, 600, 22), "YOU DIED — press R to re-roll the floor.");
+            GUI.color = Color.white;
+            return;
+        }
+
+        GUI.Label(new Rect(12, 52, 880, 22),
+            "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · R: re-roll");
+
+        if (boot != null && boot.nearBoss)
+        {
+            GUI.color = new Color(1f, 0.9f, 0.6f);
+            GUI.Label(new Rect(12, 78, 760, 22), boot.parleyOpen
+                ? "GATEKEEPER:   [1] Bribe (" + boot.bribeCost + "c)      [2] Challenge"
+                : "Press E — face the Gatekeeper (bribe it to pass, or fight)");
+            GUI.color = Color.white;
         }
     }
 }

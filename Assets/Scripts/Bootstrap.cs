@@ -2,7 +2,7 @@ using UnityEngine;
 
 // Entry point. Runs automatically on Play (no scene wiring needed) and builds the whole
 // slice in code: camera, player, follow + HUD, and a procedural floor. The loop:
-// find the boss chamber -> beat the gatekeeper -> step into the portal -> descend (next floor).
+// find the boss chamber -> beat OR bribe the gatekeeper -> step into the portal -> descend.
 public class Bootstrap : MonoBehaviour
 {
     // False if this project's Active Input Handling is the new Input System only
@@ -17,15 +17,20 @@ public class Bootstrap : MonoBehaviour
 
     public int floorNum = 1;
 
+    // parley state surfaced to the HUD
+    public bool nearBoss;
+    public bool parleyOpen;
+    public int bribeCost;
+
     GameObject worldRoot;
     Player player;
     Camera cam;
     GameHUD hud;
+    Boss currentBoss;
     bool descendPending;
 
     void Start()
     {
-        // Probe legacy input once; if it's disabled this throws and we degrade gracefully.
         try { Input.GetKey(KeyCode.Space); InputReady = true; }
         catch { InputReady = false; }
 
@@ -52,18 +57,43 @@ public class Bootstrap : MonoBehaviour
         hud = cam.GetComponent<GameHUD>();
         if (hud == null) hud = cam.gameObject.AddComponent<GameHUD>();
         hud.player = player;
+        hud.boot = this;
 
         Regenerate();
     }
 
     void Update()
     {
-        // descend is queued from the portal's trigger callback, then applied here (off the physics step)
         if (descendPending) { descendPending = false; floorNum++; Regenerate(); }
         if (InputReady && Input.GetKeyDown(KeyCode.R)) Regenerate();
+        Parley();
     }
 
-    // called by the open portal when the player steps in
+    // gatekeeper parley: face a neutral boss to bribe it or challenge it (you can also just attack it to fight)
+    void Parley()
+    {
+        nearBoss = false;
+        if (!InputReady || currentBoss == null || currentBoss.provoked || player == null || player.dead) { parleyOpen = false; return; }
+
+        nearBoss = Vector2.Distance(player.transform.position, currentBoss.transform.position) < 2.9f;
+        bribeCost = currentBoss.cost;
+        if (!nearBoss) { parleyOpen = false; return; }
+
+        if (Input.GetKeyDown(KeyCode.E)) parleyOpen = !parleyOpen;
+        if (!parleyOpen) return;
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            if (player.coins >= currentBoss.cost) { player.coins -= currentBoss.cost; currentBoss.StandAside(); }
+            parleyOpen = false;
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentBoss.Provoke();
+            parleyOpen = false;
+        }
+    }
+
     public void QueueDescend() { descendPending = true; }
 
     void Regenerate()
@@ -71,6 +101,9 @@ public class Bootstrap : MonoBehaviour
         if (worldRoot != null) Destroy(worldRoot);
         worldRoot = new GameObject("World");
         Vector2 spawn = WorldGen.Generate(worldRoot.transform, player != null ? player.transform : null, QueueDescend, floorNum);
+        currentBoss = worldRoot.GetComponentInChildren<Boss>();
+        parleyOpen = false;
+        nearBoss = false;
         if (player != null)
         {
             player.transform.position = new Vector3(spawn.x, spawn.y, 0f);
