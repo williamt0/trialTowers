@@ -8,6 +8,17 @@ public static class WorldGen
 {
     const float HW = 34f, HH = 22f;   // world half-extents
 
+    // room types: floor tint + centre-marker colour + wall hardness tier (ports the v2 ROOM_KINDS idea)
+    struct RoomKind { public string name; public Color tint; public Color col; public int tier; }
+    static readonly RoomKind[] KINDS =
+    {
+        new RoomKind { name = "Home",   tint = new Color(0.17f, 0.15f, 0.21f), col = new Color(0.55f, 0.42f, 0.30f), tier = 0 },
+        new RoomKind { name = "Shop",   tint = new Color(0.21f, 0.18f, 0.13f), col = new Color(0.88f, 0.72f, 0.32f), tier = 0 },
+        new RoomKind { name = "Smithy", tint = new Color(0.18f, 0.17f, 0.17f), col = new Color(0.62f, 0.64f, 0.70f), tier = 1 },
+        new RoomKind { name = "Garden", tint = new Color(0.14f, 0.18f, 0.14f), col = new Color(0.45f, 0.72f, 0.40f), tier = 0 },
+        new RoomKind { name = "Vault",  tint = new Color(0.22f, 0.14f, 0.14f), col = new Color(0.92f, 0.80f, 0.34f), tier = 2 },
+    };
+
     public static Vector2 Generate(Transform root, Transform player, System.Action onDescend, int floorNum)
     {
         Floor(root, Vector2.zero, new Vector2(HW * 2f + 4f, HH * 2f + 4f), new Color(0.13f, 0.12f, 0.16f), -5);
@@ -18,6 +29,15 @@ public static class WorldGen
         float totalW = cols * roomW + (cols - 1) * gapX;
         float totalH = rows * roomH + (rows - 1) * gapY;
         float x0 = -totalW / 2f + roomW / 2f, y0 = -totalH / 2f + roomH / 2f;
+        float ax1 = x0 + roomW / 2f + gapX / 2f;   // vertical alley lane between columns 0 and 1
+        float ax2 = ax1 + (roomW + gapX);          // between columns 1 and 2
+
+        // a warm-stone street grid threading the alleys (above the base floor, in the gaps so it never paves a room)
+        Color road = new Color(0.29f, 0.27f, 0.23f);
+        float rw = 3.2f;
+        Floor(root, new Vector2(0f, 0f), new Vector2(HW * 2f - 3f, rw), road, -3);    // horizontal spine through the central alley
+        Floor(root, new Vector2(ax1, 0f), new Vector2(rw, HH * 2f - 4f), road, -3);   // vertical lane 1
+        Floor(root, new Vector2(ax2, 0f), new Vector2(rw, HH * 2f - 4f), road, -3);   // vertical lane 2
 
         int bossR = Random.Range(0, rows), bossC = Random.Range(0, cols);   // one room hides the gatekeeper + portal
         for (int r = 0; r < rows; r++)
@@ -30,9 +50,11 @@ public static class WorldGen
                     BossChamber(root, player, rx, ry, roomW - 1f, roomH - 1f, onDescend, floorNum);
                     continue;
                 }
-                int tier = Random.value < 0.55f ? 0 : 1;                 // mostly timber, some stone
-                Floor(root, new Vector2(rx, ry), new Vector2(roomW, roomH), new Color(0.17f, 0.15f, 0.21f), -4);
-                Room(root, rx, ry, roomW - 1f, roomH - 1f, tier);
+                var k = KINDS[Random.Range(0, KINDS.Length)];
+                Floor(root, new Vector2(rx, ry), new Vector2(roomW, roomH), k.tint, -4);
+                Room(root, rx, ry, roomW - 1f, roomH - 1f, k.tier);
+                var prop = SpriteFactory.Quad(k.name, new Vector2(rx, ry), new Vector2(1.3f, 1.3f), k.col, 0);
+                prop.transform.SetParent(root);
             }
 
         // a reinforced vault in the centre alley
@@ -40,8 +62,6 @@ public static class WorldGen
         Room(root, 0f, 0f, 6.5f, 5.5f, 2);
 
         // enemies in the OPEN alleys only (reachable; never sealed inside a room or clipped into a wall)
-        float ax1 = x0 + roomW / 2f + gapX / 2f;   // vertical gap lane between columns 0 and 1
-        float ax2 = ax1 + (roomW + gapX);          // between columns 1 and 2
         float ay = totalH * 0.34f;
         Vector2[] spots =
         {
