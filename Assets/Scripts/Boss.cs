@@ -75,9 +75,11 @@ public class Boss : MonoBehaviour
         hp -= d;
         if (hp <= 0f)
         {
-            if (target != null) { var p = target.GetComponent<Player>(); if (p != null) p.coins += 25; }
             if (portal != null) portal.Open();
             CameraFollow.Kick(0.4f);
+            Pickup.Spawn(transform.parent, transform.position, 40, 0, new Color(0.4f, 0.9f, 0.5f));   // a big heal for the win
+            for (int i = 0; i < 3; i++)
+                Pickup.Spawn(transform.parent, (Vector2)transform.position + Random.insideUnitCircle * 1.5f, 0, 15, new Color(0.95f, 0.8f, 0.3f));
             Destroy(gameObject);
         }
     }
