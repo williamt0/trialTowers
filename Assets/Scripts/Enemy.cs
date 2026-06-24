@@ -10,10 +10,14 @@ public class Enemy : MonoBehaviour
     Rigidbody2D rb;
     Transform target;
 
-    public void Init(Transform player)
+    public void Init(Transform player, int floorNum)
     {
         target = player;
         rb = GetComponent<Rigidbody2D>();
+        int f = Mathf.Max(0, floorNum - 1);
+        hp = 25f + 8f * f;             // tougher each floor
+        speed = 2.2f + 0.08f * f;
+        touchDmg = 12f + 2.5f * f;
     }
 
     void FixedUpdate()

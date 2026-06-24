@@ -11,20 +11,21 @@ public static class Realms
         public Color ground;   // base floor
         public Color road;     // street colour
         public Color accent;   // realm tint hint (reserved for later)
+        public Color enemy;    // this realm's foe colour
     }
 
     static readonly Realm[] R =
     {
-        new Realm { name = "The Trial Grounds",          act = 1, ground = new Color(0.13f, 0.14f, 0.12f), road = new Color(0.29f, 0.27f, 0.21f), accent = new Color(0.60f, 0.80f, 0.50f) },
-        new Realm { name = "The Verdant Jungle",         act = 2, ground = new Color(0.09f, 0.14f, 0.09f), road = new Color(0.22f, 0.26f, 0.16f), accent = new Color(0.40f, 0.80f, 0.40f) },
-        new Realm { name = "The Human Empire",           act = 2, ground = new Color(0.11f, 0.13f, 0.17f), road = new Color(0.27f, 0.27f, 0.30f), accent = new Color(0.50f, 0.70f, 0.95f) },
-        new Realm { name = "The Beast Empire",           act = 2, ground = new Color(0.16f, 0.12f, 0.09f), road = new Color(0.30f, 0.24f, 0.17f), accent = new Color(0.95f, 0.60f, 0.25f) },
-        new Realm { name = "The Elves Forest",           act = 2, ground = new Color(0.10f, 0.14f, 0.11f), road = new Color(0.22f, 0.27f, 0.20f), accent = new Color(0.50f, 0.85f, 0.45f) },
-        new Realm { name = "The Mob Empire",             act = 2, ground = new Color(0.15f, 0.08f, 0.11f), road = new Color(0.26f, 0.18f, 0.20f), accent = new Color(0.80f, 0.35f, 0.65f) },
-        new Realm { name = "Peak of the Two Families",   act = 3, ground = new Color(0.14f, 0.13f, 0.09f), road = new Color(0.30f, 0.28f, 0.20f), accent = new Color(0.95f, 0.88f, 0.55f) },
-        new Realm { name = "Court of the Upper Beings",  act = 4, ground = new Color(0.10f, 0.08f, 0.14f), road = new Color(0.22f, 0.18f, 0.30f), accent = new Color(0.72f, 0.50f, 1.00f) },
-        new Realm { name = "The Hall of Echoes",         act = 4, ground = new Color(0.10f, 0.12f, 0.16f), road = new Color(0.24f, 0.26f, 0.30f), accent = new Color(0.60f, 0.85f, 1.00f) },
-        new Realm { name = "The Tower's Crown",          act = 4, ground = new Color(0.14f, 0.12f, 0.07f), road = new Color(0.32f, 0.28f, 0.18f), accent = new Color(1.00f, 0.90f, 0.60f) },
+        new Realm { name = "The Trial Grounds",          act = 1, ground = new Color(0.13f, 0.14f, 0.12f), road = new Color(0.29f, 0.27f, 0.21f), accent = new Color(0.60f, 0.80f, 0.50f), enemy = new Color(0.70f, 0.80f, 0.45f) },
+        new Realm { name = "The Verdant Jungle",         act = 2, ground = new Color(0.09f, 0.14f, 0.09f), road = new Color(0.22f, 0.26f, 0.16f), accent = new Color(0.40f, 0.80f, 0.40f), enemy = new Color(0.45f, 0.80f, 0.35f) },
+        new Realm { name = "The Human Empire",           act = 2, ground = new Color(0.11f, 0.13f, 0.17f), road = new Color(0.27f, 0.27f, 0.30f), accent = new Color(0.50f, 0.70f, 0.95f), enemy = new Color(0.70f, 0.74f, 0.82f) },
+        new Realm { name = "The Beast Empire",           act = 2, ground = new Color(0.16f, 0.12f, 0.09f), road = new Color(0.30f, 0.24f, 0.17f), accent = new Color(0.95f, 0.60f, 0.25f), enemy = new Color(0.90f, 0.55f, 0.25f) },
+        new Realm { name = "The Elves Forest",           act = 2, ground = new Color(0.10f, 0.14f, 0.11f), road = new Color(0.22f, 0.27f, 0.20f), accent = new Color(0.50f, 0.85f, 0.45f), enemy = new Color(0.60f, 0.85f, 0.60f) },
+        new Realm { name = "The Mob Empire",             act = 2, ground = new Color(0.15f, 0.08f, 0.11f), road = new Color(0.26f, 0.18f, 0.20f), accent = new Color(0.80f, 0.35f, 0.65f), enemy = new Color(0.85f, 0.35f, 0.70f) },
+        new Realm { name = "Peak of the Two Families",   act = 3, ground = new Color(0.14f, 0.13f, 0.09f), road = new Color(0.30f, 0.28f, 0.20f), accent = new Color(0.95f, 0.88f, 0.55f), enemy = new Color(0.95f, 0.85f, 0.50f) },
+        new Realm { name = "Court of the Upper Beings",  act = 4, ground = new Color(0.10f, 0.08f, 0.14f), road = new Color(0.22f, 0.18f, 0.30f), accent = new Color(0.72f, 0.50f, 1.00f), enemy = new Color(0.78f, 0.55f, 1.00f) },
+        new Realm { name = "The Hall of Echoes",         act = 4, ground = new Color(0.10f, 0.12f, 0.16f), road = new Color(0.24f, 0.26f, 0.30f), accent = new Color(0.60f, 0.85f, 1.00f), enemy = new Color(0.65f, 0.85f, 1.00f) },
+        new Realm { name = "The Tower's Crown",          act = 4, ground = new Color(0.14f, 0.12f, 0.07f), road = new Color(0.32f, 0.28f, 0.18f), accent = new Color(1.00f, 0.90f, 0.60f), enemy = new Color(1.00f, 0.92f, 0.65f) },
     };
 
     public static Realm For(int floorNum)

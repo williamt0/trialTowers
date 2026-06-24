@@ -69,7 +69,7 @@ public static class WorldGen
             new Vector2(-22f, 0f), new Vector2(-12f, 0f), new Vector2(12f, 0f), new Vector2(22f, 0f),
             new Vector2(ax1, -ay), new Vector2(ax1, ay), new Vector2(ax2, -ay), new Vector2(ax2, ay),
         };
-        foreach (var s in spots) SpawnEnemy(root, player, s);
+        foreach (var s in spots) SpawnEnemy(root, player, s, realm.enemy, floorNum);
 
         return new Vector2(-HW + 5f, 0f);   // west-edge entrance
     }
@@ -144,14 +144,14 @@ public static class WorldGen
         bossGo.AddComponent<Boss>().Init(player, portal, floorNum);
     }
 
-    static void SpawnEnemy(Transform root, Transform player, Vector2 pos)
+    static void SpawnEnemy(Transform root, Transform player, Vector2 pos, Color col, int floorNum)
     {
-        var go = SpriteFactory.Quad("Enemy", pos, new Vector2(0.85f, 0.85f), new Color(0.85f, 0.3f, 0.3f), 8);
+        var go = SpriteFactory.Quad("Enemy", pos, new Vector2(0.85f, 0.85f), col, 8);
         go.transform.SetParent(root);
         var rb = go.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
         rb.freezeRotation = true;
         go.AddComponent<BoxCollider2D>();
-        go.AddComponent<Enemy>().Init(player);
+        go.AddComponent<Enemy>().Init(player, floorNum);
     }
 }
