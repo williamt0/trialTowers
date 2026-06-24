@@ -46,8 +46,8 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
-        GUI.Label(new Rect(12, 74, 900, 22),
-            "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · R: re-roll");
+        GUI.Label(new Rect(12, 74, 980, 22),
+            "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · Shift: dash · R: re-roll");
 
         if (boot != null && boot.nearBoss)
         {

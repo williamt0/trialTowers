@@ -9,11 +9,12 @@ public class Player : MonoBehaviour
     public bool dead;
     public int coins;
     public float hurtFlash;
+    public float dashSpeed = 18f, dashTime = 0.16f, dashCd = 0.7f;
 
     Rigidbody2D rb;
     Vector2 face = Vector2.down;
-    float cd, iframe, knockT;
-    Vector2 knockV;
+    float cd, iframe, knockT, dashT, dashCdT;
+    Vector2 knockV, dashDir;
 
     void Awake()
     {
@@ -25,14 +26,23 @@ public class Player : MonoBehaviour
         if (cd > 0f) cd -= Time.deltaTime;
         if (iframe > 0f) iframe -= Time.deltaTime;
         if (hurtFlash > 0f) hurtFlash -= Time.deltaTime;
+        if (dashCdT > 0f) dashCdT -= Time.deltaTime;
         if (dead || !Bootstrap.InputReady) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
+        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCdT <= 0f)
+        {
+            dashT = dashTime;
+            dashCdT = dashCd;
+            iframe = Mathf.Max(iframe, dashTime + 0.05f);   // i-frames: dash dodges contact damage
+            dashDir = (face.sqrMagnitude > 0.01f ? face : Vector2.down);
+        }
     }
 
     void FixedUpdate()
     {
         if (knockT > 0f) { knockT -= Time.fixedDeltaTime; rb.linearVelocity = knockV; knockV *= 0.85f; return; }
+        if (dashT > 0f) { dashT -= Time.fixedDeltaTime; rb.linearVelocity = dashDir * dashSpeed; return; }
         if (dead || !Bootstrap.InputReady) { rb.linearVelocity = Vector2.zero; return; }
         Vector2 mv = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         if (mv.sqrMagnitude > 1f) mv.Normalize();
