@@ -39,6 +39,6 @@ public class Wall : MonoBehaviour
         hp -= d;
         int ti = Mathf.Clamp(tier, 0, 2);
         if (sr != null) sr.color = Color.Lerp(Color.black, TIER_COL[ti], 0.4f + 0.6f * Mathf.Clamp01(hp / maxHp));
-        if (hp <= 0f) Destroy(gameObject);               // breached
+        if (hp <= 0f) { CameraFollow.Kick(tier >= 2 ? 0.22f : 0.08f); Destroy(gameObject); }   // breached (heavier shake for reinforced)
     }
 }

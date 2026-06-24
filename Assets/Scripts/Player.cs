@@ -8,10 +8,12 @@ public class Player : MonoBehaviour
     public float atkRange = 1.7f, atkDmg = 30f, atkCd = 0.30f;
     public bool dead;
     public int coins;
+    public float hurtFlash;
 
     Rigidbody2D rb;
     Vector2 face = Vector2.down;
-    float cd, iframe;
+    float cd, iframe, knockT;
+    Vector2 knockV;
 
     void Awake()
     {
@@ -22,6 +24,7 @@ public class Player : MonoBehaviour
     {
         if (cd > 0f) cd -= Time.deltaTime;
         if (iframe > 0f) iframe -= Time.deltaTime;
+        if (hurtFlash > 0f) hurtFlash -= Time.deltaTime;
         if (dead || !Bootstrap.InputReady) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
@@ -29,6 +32,7 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (knockT > 0f) { knockT -= Time.fixedDeltaTime; rb.linearVelocity = knockV; knockV *= 0.85f; return; }
         if (dead || !Bootstrap.InputReady) { rb.linearVelocity = Vector2.zero; return; }
         Vector2 mv = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         if (mv.sqrMagnitude > 1f) mv.Normalize();
@@ -46,21 +50,25 @@ public class Player : MonoBehaviour
             var w = h.GetComponent<Wall>();
             if (w != null) { w.TakeDamage(atkDmg * 0.6f + 8f); continue; }
             var e = h.GetComponent<Enemy>();
-            if (e != null) { e.TakeDamage(atkDmg); continue; }
+            if (e != null) { e.TakeDamage(atkDmg, rb.position); continue; }
             var b = h.GetComponent<Boss>();
-            if (b != null) b.TakeDamage(atkDmg);
+            if (b != null) b.TakeDamage(atkDmg, rb.position);
         }
     }
 
-    // i-frames prevent contact damage from chip-killing across physics steps
-    public void Hurt(float d)
+    public void Hurt(float d, Vector2 from)
     {
         if (dead || iframe > 0f) return;
         hp = Mathf.Max(0f, hp - d);
         iframe = 0.5f;
+        hurtFlash = 0.35f;
+        knockV = ((Vector2)transform.position - from).normalized * 4f;
+        knockT = 0.10f;
+        CameraFollow.Kick(0.2f);
         if (hp <= 0f)
         {
             dead = true;
+            knockT = 0f;
             if (rb != null) rb.linearVelocity = Vector2.zero;
         }
     }

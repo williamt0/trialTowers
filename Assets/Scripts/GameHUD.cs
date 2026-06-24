@@ -19,6 +19,14 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
+        if (player != null && player.hurtFlash > 0f)
+        {
+            var prevc = GUI.color;
+            GUI.color = new Color(1f, 0f, 0f, Mathf.Clamp01(player.hurtFlash) * 0.4f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = prevc;
+        }
+
         var realm = Realms.For(floor);
         GUI.color = new Color(0.8f, 0.8f, 0.85f);
         GUI.Label(new Rect(12, 8, 700, 22), Realms.ActLabel(floor));
