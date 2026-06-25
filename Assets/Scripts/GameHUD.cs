@@ -93,5 +93,31 @@ public class GameHUD : MonoBehaviour
                 : "Press E — face the Gatekeeper (bribe it to pass, or fight)");
             GUI.color = Color.white;
         }
+
+        BossBar();
+    }
+
+    // a top-centre health bar for the gatekeeper once the fight is on (Unity == treats a destroyed boss as null)
+    void BossBar()
+    {
+        var b = boot != null ? boot.CurrentBoss : null;
+        if (b == null || !b.provoked) return;
+
+        float frac = b.maxHp > 0f ? Mathf.Clamp01(b.hp / b.maxHp) : 0f;
+        float bw = Mathf.Min(440f, Screen.width - 80f);
+        float bx = (Screen.width - bw) / 2f;
+        float by = 30f;   // leaves room above for the title (by - 18)
+
+        var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 12 };
+        GUI.color = new Color(1f, 0.85f, 0.6f);
+        GUI.Label(new Rect(bx, by - 18f, bw, 16f), "THE GATEKEEPER — " + Realms.For(floor).name, cs);
+
+        GUI.color = new Color(0f, 0f, 0f, 0.55f);                                   // backing
+        GUI.DrawTexture(new Rect(bx - 2f, by - 2f, bw + 4f, 18f), Texture2D.whiteTexture);
+        GUI.color = frac > 0.35f ? new Color(0.85f, 0.3f, 0.25f) : new Color(1f, 0.55f, 0.18f);   // orange once in enrage range
+        GUI.DrawTexture(new Rect(bx, by, bw * frac, 14f), Texture2D.whiteTexture);
+        GUI.color = new Color(1f, 0.9f, 0.4f, 0.9f);                                // enrage threshold tick at 35%
+        GUI.DrawTexture(new Rect(bx + bw * 0.35f, by - 2f, 2f, 18f), Texture2D.whiteTexture);
+        GUI.color = Color.white;
     }
 }

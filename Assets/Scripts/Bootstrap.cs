@@ -175,6 +175,8 @@ public class Bootstrap : MonoBehaviour
         }
     }
 
+    public Boss CurrentBoss { get { return currentBoss; } }   // for the HUD boss bar (Unity == handles a destroyed boss)
+
     public void QueueDescend() { descendPending = true; }
 
     void Regenerate()
