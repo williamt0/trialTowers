@@ -14,6 +14,7 @@ public class GameHUD : MonoBehaviour
 
     void Update()
     {
+        if (boot != null && boot.title) return;   // hold the floor banner until the run actually begins
         if (floor != lastFloor) { lastFloor = floor; bannerT = BannerDur; }   // new floor reached -> play the intro
         if (bannerT > 0f) bannerT -= Time.deltaTime;
     }
@@ -25,6 +26,25 @@ public class GameHUD : MonoBehaviour
             GUI.color = new Color(1f, 0.55f, 0.55f);
             GUI.Label(new Rect(12, 8, 900, 24),
                 "INPUT DISABLED — set Edit > Project Settings > Player > Active Input Handling to \"Both\", then press Play again.");
+            GUI.color = Color.white;
+            return;
+        }
+
+        if (boot != null && boot.title)
+        {
+            GUI.color = new Color(0.03f, 0.03f, 0.05f, 0.82f);                  // dim the frozen floor behind the title
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            var ts = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+            ts.fontSize = 42;
+            GUI.color = new Color(0.96f, 0.88f, 0.5f);
+            GUI.Label(new Rect(0, Screen.height / 2f - 96f, Screen.width, 56f), "TRIAL TOWERS", ts);
+            ts.fontSize = 15;
+            GUI.color = new Color(0.82f, 0.84f, 0.92f);
+            GUI.Label(new Rect(0, Screen.height / 2f - 28f, Screen.width, 24f), "Climb the tower · beat or bribe each gatekeeper · reach the Crown", ts);
+            GUI.Label(new Rect(0, Screen.height / 2f + 2f, Screen.width, 24f), "WASD move · Space/LMB melee · RMB/Q ranged · Shift dash", ts);
+            ts.fontSize = 17;
+            GUI.color = new Color(1f, 0.92f, 0.6f, 0.55f + 0.45f * Mathf.PingPong(Time.unscaledTime * 1.8f, 1f));   // pulse (unscaled — timeScale is 0)
+            GUI.Label(new Rect(0, Screen.height / 2f + 46f, Screen.width, 28f), "Press Space to begin", ts);
             GUI.color = Color.white;
             return;
         }

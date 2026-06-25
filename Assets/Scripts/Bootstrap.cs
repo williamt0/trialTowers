@@ -24,6 +24,7 @@ public class Bootstrap : MonoBehaviour
     public const int FinalFloor = 10;   // Tower's Crown — beating its gatekeeper wins the run
     public int floorNum = 1;
     public bool won;
+    public bool title;   // opens on a frozen title screen until the player presses Space
 
     // parley state surfaced to the HUD
     public bool nearBoss;
@@ -73,10 +74,20 @@ public class Bootstrap : MonoBehaviour
         hud.boot = this;
 
         Regenerate();
+
+        title = true; Paused = true; Time.timeScale = 0f;   // hold on the title screen until the player begins
     }
 
     void Update()
     {
+        if (title)   // frozen on the title screen until the player begins
+        {
+            if (InputReady && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
+            {
+                title = false; Paused = false; Time.timeScale = 1f;
+            }
+            return;
+        }
         if (won) { if (InputReady && Input.GetKeyDown(KeyCode.R)) RestartRun(); return; }   // run cleared — only a fresh run from here
         // stepping into the portal opens the cache instead of descending immediately
         if (descendPending)
