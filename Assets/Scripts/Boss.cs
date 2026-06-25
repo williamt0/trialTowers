@@ -2,8 +2,9 @@ using UnityEngine;
 
 // The floor's gatekeeper. Guards the portal inside the boss chamber. Neutral until provoked,
 // so you can approach to parley (bribe it to stand aside) or just fight it. Either way the portal opens.
-// Once provoked it chases and, on a cooldown, freezes to telegraph an attack — a radial ring,
-// an aimed fan, or (act III+) a committed charge — then enrages (faster, denser bursts) below a third HP.
+// Once provoked it chases and, on a cooldown, telegraphs an attack — a radial ring, an aimed fan, or
+// (act III+) either a committed charge (Sentinel) or a wave of summoned minions (Summoner) — and
+// enrages (faster, denser bursts) below a third HP.
 [RequireComponent(typeof(Rigidbody2D))]
 public class Boss : MonoBehaviour
 {
@@ -26,6 +27,10 @@ public class Boss : MonoBehaviour
     int floor;
     float chargeT, chargeSpeed = 11f;
     Vector2 chargeDir;
+    int archetype;                  // 0 Sentinel (ring/fan/charge), 1 Summoner (ring/fan/summon)
+    public static int liveMinions;  // concurrent summoned minions; STATIC so a minion never holds a boss reference (reset in Init)
+
+    public string Title => archetype == 1 ? "THE SUMMONER" : "THE GATEKEEPER";
 
     void Awake()
     {
@@ -46,6 +51,8 @@ public class Boss : MonoBehaviour
         atkCd = 2.2f;                     // a brief grace before the first volley
         floor = floorNum;
         chargeSpeed = 10f + 0.4f * f;
+        archetype = (floorNum >= 7 && Random.value < 0.5f) ? 1 : 0;   // apex floors are 50/50 Sentinel / Summoner
+        liveMinions = 0;                  // fresh count each floor (covers minions destroyed with the old worldRoot)
     }
 
     public void Provoke() { provoked = true; }
@@ -85,7 +92,8 @@ public class Boss : MonoBehaviour
             {
                 FirePattern(pendingPattern);
                 if (sr != null && flashT <= 0f) sr.color = baseCol;
-                if (pendingPattern != 2) atkCd = enraged ? 1.5f : 2.6f;   // a charge sets its own cd when it ends
+                if (pendingPattern == 3) atkCd = enraged ? 3.5f : 5f;          // summons are infrequent
+                else if (pendingPattern != 2) atkCd = enraged ? 1.5f : 2.6f;   // ranged; a charge (2) sets its own cd when it ends
             }
             return;
         }
@@ -102,7 +110,12 @@ public class Boss : MonoBehaviour
     // act III+ gatekeepers fold a charge into the ring/fan mix; lower floors stay purely ranged
     int PickPattern()
     {
-        if (floor >= 7 && Random.value < 0.33f) return 2;   // charge
+        if (archetype == 1)   // Summoner: ring/fan + an occasional summon wave (no charge)
+        {
+            if (floor >= 7 && liveMinions < 4 && Random.value < 0.4f) return 3;   // summon
+            return Random.value < 0.5f ? 0 : 1;
+        }
+        if (floor >= 7 && Random.value < 0.33f) return 2;   // Sentinel charge
         return Random.value < 0.5f ? 0 : 1;                 // ring or fan
     }
 
@@ -126,6 +139,20 @@ public class Boss : MonoBehaviour
             chargeDir = ((Vector2)target.position - origin).normalized;
             if (chargeDir.sqrMagnitude < 0.01f) chargeDir = Vector2.down;
             chargeT = 0.55f;
+            CameraFollow.Kick(0.2f);
+            return;
+        }
+        if (pattern == 3)   // summon: a small wave of weak minions near the boss (capped via liveMinions)
+        {
+            int want = Mathf.Min(2, 4 - liveMinions);
+            Color mc = Realms.For(floor).enemy;
+            for (int i = 0; i < want; i++)
+            {
+                float a = Random.value * Mathf.PI * 2f;
+                Vector2 mp = origin + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 1.8f;   // dynamic-rb minions depenetrate if they clip a wall
+                WorldGen.SpawnMinion(transform.parent, target, mp, mc, floor);
+                liveMinions++;
+            }
             CameraFollow.Kick(0.2f);
             return;
         }

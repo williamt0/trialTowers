@@ -215,6 +215,14 @@ public static class WorldGen
         return Random.value < Mathf.Min(0.08f + 0.03f * floorNum, 0.35f);
     }
 
+    // a boss-summoned minion: a weakened chaser flagged so it drops no loot (called from Boss.FirePattern)
+    public static Enemy SpawnMinion(Transform root, Transform player, Vector2 pos, Color col, int floorNum)
+    {
+        var en = SpawnEnemy(root, player, pos, col, floorNum, 0);
+        en.MakeMinion();
+        return en;
+    }
+
     static Enemy SpawnEnemy(Transform root, Transform player, Vector2 pos, Color col, int floorNum, int kind)
     {
         var go = SpriteFactory.Quad("Enemy", pos, new Vector2(0.85f, 0.85f), col, 8);

@@ -15,6 +15,7 @@ public class Enemy : MonoBehaviour
     float flashT, knockT, shootCd;
     Vector2 knockV;
     bool elite;
+    bool minion;   // boss-summoned add: drops no loot, decrements Boss.liveMinions on death
 
     void Awake()
     {
@@ -48,6 +49,15 @@ public class Enemy : MonoBehaviour
             baseCol = Color.Lerp(baseCol, new Color(0.96f, 0.82f, 0.28f), 0.6f);   // golden tell (Update restores to baseCol after a hit-flash)
             sr.color = baseCol;
         }
+    }
+
+    // downgrade an Init'd enemy into a boss-summoned minion: weaker, smaller, purple, no loot
+    public void MakeMinion()
+    {
+        minion = true;
+        hp *= 0.4f;
+        transform.localScale *= 0.85f;
+        if (sr != null) { baseCol = Color.Lerp(baseCol, new Color(0.6f, 0.32f, 0.72f), 0.55f); sr.color = baseCol; }
     }
 
     void Update()
@@ -106,10 +116,17 @@ public class Enemy : MonoBehaviour
         if (hp <= 0f)
         {
             CameraFollow.Kick(elite ? 0.2f : 0.12f);
-            int coin = (kind == 2 ? 10 : 5) + (elite ? 15 : 0);
-            Pickup.Spawn(transform.parent, transform.position, 0, coin, new Color(0.95f, 0.8f, 0.3f));   // coin orb (elites pay more)
-            if (elite || Random.value < 0.3f)
-                Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, elite ? 35 : 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb (guaranteed from elites)
+            if (minion)
+            {
+                Boss.liveMinions = Mathf.Max(0, Boss.liveMinions - 1);   // no loot: minions don't subsidize the bribe economy
+            }
+            else
+            {
+                int coin = (kind == 2 ? 10 : 5) + (elite ? 15 : 0);
+                Pickup.Spawn(transform.parent, transform.position, 0, coin, new Color(0.95f, 0.8f, 0.3f));   // coin orb (elites pay more)
+                if (elite || Random.value < 0.3f)
+                    Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, elite ? 35 : 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb (guaranteed from elites)
+            }
             Destroy(gameObject);
         }
     }

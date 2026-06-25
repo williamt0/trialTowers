@@ -273,7 +273,7 @@ public class GameHUD : MonoBehaviour
 
         var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 12 };
         GUI.color = new Color(1f, 0.85f, 0.6f);
-        GUI.Label(new Rect(bx, by - 18f, bw, 16f), "THE GATEKEEPER — " + Realms.For(floor).name, cs);
+        GUI.Label(new Rect(bx, by - 18f, bw, 16f), b.Title + " — " + Realms.For(floor).name, cs);
 
         GUI.color = new Color(0f, 0f, 0f, 0.55f);                                   // backing
         GUI.DrawTexture(new Rect(bx - 2f, by - 2f, bw + 4f, 18f), Texture2D.whiteTexture);
