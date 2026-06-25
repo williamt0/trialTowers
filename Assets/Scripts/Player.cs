@@ -17,6 +17,10 @@ public class Player : MonoBehaviour
     float cd, iframe, knockT, dashT, dashCdT, rangedCdT, burnCd;
     Vector2 knockV, dashDir;
 
+    // 0..1 cooldown readiness for the HUD pips (1 = ready)
+    public float DashReady { get { return dashCd > 0f ? Mathf.Clamp01(1f - dashCdT / dashCd) : 1f; } }
+    public float RangedReady { get { return rangedCd > 0f ? Mathf.Clamp01(1f - rangedCdT / rangedCd) : 1f; } }
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();

@@ -61,8 +61,7 @@ public class GameHUD : MonoBehaviour
 
         if (player == null) return;
 
-        GUI.Label(new Rect(12, 52, 600, 22),
-            "HP: " + Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp) + "      Coins: " + player.coins);
+        Vitals();
 
         if (player.dead)
         {
@@ -106,6 +105,36 @@ public class GameHUD : MonoBehaviour
 
         BossBar();
         FloorBanner();
+    }
+
+    // player vitals: colour-coded HP bar + numeric, coins, and dash / ranged cooldown pips
+    void Vitals()
+    {
+        float hpFrac = player.maxHp > 0f ? Mathf.Clamp01(player.hp / player.maxHp) : 0f;
+        var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11 };
+
+        GUI.color = new Color(0f, 0f, 0f, 0.5f);                                    // HP backing
+        GUI.DrawTexture(new Rect(12, 52, 204, 18), Texture2D.whiteTexture);
+        GUI.color = hpFrac > 0.5f ? new Color(0.4f, 0.8f, 0.35f)
+                  : (hpFrac > 0.25f ? new Color(0.92f, 0.82f, 0.3f) : new Color(0.92f, 0.36f, 0.3f));
+        GUI.DrawTexture(new Rect(14, 54, 200f * hpFrac, 14), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+        GUI.Label(new Rect(14, 53, 200, 15), Mathf.CeilToInt(player.hp) + " / " + Mathf.CeilToInt(player.maxHp), cs);
+
+        GUI.Label(new Rect(224, 52, 90, 18), "Coins: " + player.coins);
+        Pip(322f, "DASH", player.DashReady);
+        Pip(392f, "SHOT", player.RangedReady);
+    }
+
+    void Pip(float x, string label, float ready)
+    {
+        GUI.color = new Color(0f, 0f, 0f, 0.5f);
+        GUI.DrawTexture(new Rect(x, 52, 64, 18), Texture2D.whiteTexture);
+        GUI.color = ready >= 1f ? new Color(0.5f, 0.85f, 1f) : new Color(0.32f, 0.42f, 0.52f);   // bright when ready
+        GUI.DrawTexture(new Rect(x + 2f, 54, 60f * Mathf.Clamp01(ready), 14), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+        var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 10 };
+        GUI.Label(new Rect(x, 53, 64, 15), label, cs);
     }
 
     // a brief act / floor / realm card that fades in and out on arrival at a new floor
