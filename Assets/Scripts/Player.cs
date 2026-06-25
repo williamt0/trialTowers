@@ -10,10 +10,11 @@ public class Player : MonoBehaviour
     public int coins;
     public float hurtFlash;
     public float dashSpeed = 18f, dashTime = 0.16f, dashCd = 0.7f;
+    public float rangedDmg = 16f, rangedCd = 0.5f;
 
     Rigidbody2D rb;
     Vector2 face = Vector2.down;
-    float cd, iframe, knockT, dashT, dashCdT;
+    float cd, iframe, knockT, dashT, dashCdT, rangedCdT;
     Vector2 knockV, dashDir;
 
     void Awake()
@@ -27,9 +28,12 @@ public class Player : MonoBehaviour
         if (iframe > 0f) iframe -= Time.deltaTime;
         if (hurtFlash > 0f) hurtFlash -= Time.deltaTime;
         if (dashCdT > 0f) dashCdT -= Time.deltaTime;
+        if (rangedCdT > 0f) rangedCdT -= Time.deltaTime;
         if (dead || !Bootstrap.InputReady || Bootstrap.Paused) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
+        if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Q)) && rangedCdT <= 0f)
+            Shoot();
         if (Input.GetKeyDown(KeyCode.LeftShift) && dashCdT <= 0f)
         {
             dashT = dashTime;
@@ -64,6 +68,13 @@ public class Player : MonoBehaviour
             var b = h.GetComponent<Boss>();
             if (b != null) b.TakeDamage(atkDmg, rb.position);
         }
+    }
+
+    void Shoot()
+    {
+        rangedCdT = rangedCd;
+        Vector2 dir = (face.sqrMagnitude > 0.01f ? face : Vector2.down).normalized;
+        Projectile.Spawn(Bootstrap.WorldRoot, rb.position + dir * 0.7f, dir * 12f, rangedDmg, new Color(0.55f, 0.9f, 1f), true);   // friendly shot
     }
 
     public void Hurt(float d, Vector2 from)

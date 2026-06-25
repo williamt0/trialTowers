@@ -12,6 +12,9 @@ public class Bootstrap : MonoBehaviour
     // True while the player is browsing the gatekeeper's cache at the portal — freezes the player.
     public static bool Paused;
 
+    // The current floor's container, so the top-level Player can parent its shots into it (cleaned up on regen).
+    public static Transform WorldRoot;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
@@ -179,6 +182,7 @@ public class Bootstrap : MonoBehaviour
         Time.timeScale = 1f;   // unfreeze if we came from the cache (or an R re-roll mid-pause)
         if (worldRoot != null) Destroy(worldRoot);
         worldRoot = new GameObject("World");
+        WorldRoot = worldRoot.transform;   // player shots parent here so they're cleared with the floor
         Vector2 spawn = WorldGen.Generate(worldRoot.transform, player != null ? player.transform : null, QueueDescend, floorNum);
         currentBoss = worldRoot.GetComponentInChildren<Boss>();
         parleyOpen = false;
