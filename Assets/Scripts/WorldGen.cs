@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // A compact Streets-of-Rogue-style floor, generated fresh every call:
 // dark ground, an unbreakable boundary, a grid of walled rooms (tiered breakable
@@ -62,15 +63,18 @@ public static class WorldGen
         Floor(root, Vector2.zero, new Vector2(7f, 6f), new Color(0.22f, 0.14f, 0.14f), -4);
         Room(root, 0f, 0f, 6.5f, 5.5f, 2);
 
-        // enemies in the OPEN alleys only (reachable; never sealed inside a room or clipped into a wall)
+        // enemies in the OPEN alleys only (reachable; never sealed inside a room or clipped into a wall).
+        // Both the count and the share of tough archetypes scale with depth.
         float ay = totalH * 0.34f;
-        Vector2[] spots =
-        {
-            new Vector2(-22f, 0f), new Vector2(-12f, 0f), new Vector2(12f, 0f), new Vector2(22f, 0f),
-            new Vector2(ax1, -ay), new Vector2(ax1, ay), new Vector2(ax2, -ay), new Vector2(ax2, ay),
-        };
-        foreach (var s in spots)
-            SpawnEnemy(root, player, s, realm.enemy, floorNum, Random.value < 0.6f ? 0 : (Random.value < 0.8f ? 1 : 2));   // ~60% chaser, ~32% ranged, ~8% brute
+        Vector2 entrance = new Vector2(-HW + 5f, 0f);
+        var cand = new List<Vector2>();
+        for (float x = -22f; x <= 26f; x += 6.5f) cand.Add(new Vector2(x, 0f));            // central horizontal alley
+        for (float y = -ay; y <= ay + 0.1f; y += 5f) { cand.Add(new Vector2(ax1, y)); cand.Add(new Vector2(ax2, y)); }   // vertical lanes
+        cand.RemoveAll(c => Vector2.Distance(c, entrance) < 9f || (Mathf.Abs(c.x) < 4f && Mathf.Abs(c.y) < 3.5f));        // not on the entrance, not in the vault
+        for (int i = cand.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); var t = cand[i]; cand[i] = cand[j]; cand[j] = t; }   // shuffle
+        int count = Mathf.Min(Mathf.Clamp(6 + floorNum, 6, 18), cand.Count);
+        for (int i = 0; i < count; i++)
+            SpawnEnemy(root, player, cand[i], realm.enemy, floorNum, RollKind(floorNum));
 
         return new Vector2(-HW + 5f, 0f);   // west-edge entrance
     }
@@ -143,6 +147,17 @@ public static class WorldGen
         brb.freezeRotation = true;
         bossGo.AddComponent<BoxCollider2D>();
         bossGo.AddComponent<Boss>().Init(player, portal, floorNum);
+    }
+
+    // archetype roll: deeper floors lean harder on ranged kiters and brutes (0 chaser, 1 ranged, 2 brute)
+    static int RollKind(int floorNum)
+    {
+        float brute = Mathf.Min(0.05f + 0.02f * floorNum, 0.25f);
+        float ranged = Mathf.Min(0.24f + 0.02f * floorNum, 0.45f);
+        float r = Random.value;
+        if (r < brute) return 2;
+        if (r < brute + ranged) return 1;
+        return 0;
     }
 
     static void SpawnEnemy(Transform root, Transform player, Vector2 pos, Color col, int floorNum, int kind)
