@@ -49,7 +49,13 @@ public class Pickup : MonoBehaviour
     {
         if (collected) return;   // guard against trigger + proximity firing in the same frame
         collected = true;
-        if (healAmount > 0) p.hp = Mathf.Min(p.maxHp, p.hp + healAmount);
+        if (healAmount > 0)
+        {
+            float before = p.hp;
+            p.hp = Mathf.Min(p.maxHp, p.hp + healAmount);
+            int healed = Mathf.RoundToInt(p.hp - before);
+            if (healed > 0) FloatingText.Spawn(transform.position, "+" + healed, new Color(0.5f, 0.95f, 0.5f), 15f);
+        }
         if (coinAmount > 0) p.coins += coinAmount;
         CameraFollow.Kick(0.04f);
         Destroy(gameObject);

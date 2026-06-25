@@ -170,6 +170,7 @@ public class Boss : MonoBehaviour
         knockV = ((Vector2)transform.position - from).normalized * 3.5f;   // heavier — less knockback
         knockT = 0.12f;
         hp -= d;
+        FloatingText.Spawn(transform.position, Mathf.RoundToInt(d).ToString(), new Color(1f, 0.85f, 0.55f), 16f);
         if (!enraged && hp <= maxHp * 0.35f)   // last-third desperation: faster, denser, angrier
         {
             enraged = true;

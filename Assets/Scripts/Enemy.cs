@@ -102,6 +102,7 @@ public class Enemy : MonoBehaviour
         knockV = ((Vector2)transform.position - from).normalized * (kind == 2 ? 3f : 6f);   // brutes resist knockback
         knockT = 0.14f;
         hp -= d;
+        FloatingText.Spawn(transform.position, Mathf.RoundToInt(d).ToString(), new Color(1f, 0.95f, 0.7f), elite ? 17f : 14f);
         if (hp <= 0f)
         {
             CameraFollow.Kick(elite ? 0.2f : 0.12f);

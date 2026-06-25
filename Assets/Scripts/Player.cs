@@ -125,6 +125,7 @@ public class Player : MonoBehaviour
     {
         if (dead || iframe > 0f) return;
         hp = Mathf.Max(0f, hp - d);
+        FloatingText.Spawn(transform.position, Mathf.RoundToInt(d).ToString(), new Color(1f, 0.4f, 0.35f), 18f);
         iframe = 0.5f;
         hurtFlash = 0.35f;
         knockV = ((Vector2)transform.position - from).normalized * 4f;
