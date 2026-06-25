@@ -27,7 +27,7 @@ public class Player : MonoBehaviour
         if (iframe > 0f) iframe -= Time.deltaTime;
         if (hurtFlash > 0f) hurtFlash -= Time.deltaTime;
         if (dashCdT > 0f) dashCdT -= Time.deltaTime;
-        if (dead || !Bootstrap.InputReady) return;
+        if (dead || !Bootstrap.InputReady || Bootstrap.Paused) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
         if (Input.GetKeyDown(KeyCode.LeftShift) && dashCdT <= 0f)
@@ -43,7 +43,7 @@ public class Player : MonoBehaviour
     {
         if (knockT > 0f) { knockT -= Time.fixedDeltaTime; rb.linearVelocity = knockV; knockV *= 0.85f; return; }
         if (dashT > 0f) { dashT -= Time.fixedDeltaTime; rb.linearVelocity = dashDir * dashSpeed; return; }
-        if (dead || !Bootstrap.InputReady) { rb.linearVelocity = Vector2.zero; return; }
+        if (dead || !Bootstrap.InputReady || Bootstrap.Paused) { rb.linearVelocity = Vector2.zero; return; }
         Vector2 mv = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         if (mv.sqrMagnitude > 1f) mv.Normalize();
         if (mv.sqrMagnitude > 0.01f) face = mv.normalized;

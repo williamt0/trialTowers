@@ -46,6 +46,26 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
+        // the gatekeeper's cache (upgrade shop at the portal) takes over the prompt area while browsing
+        if (boot != null && boot.choosing)
+        {
+            GUI.color = new Color(1f, 0.9f, 0.6f);
+            GUI.Label(new Rect(12, 74, 940, 22), "GATEKEEPER'S CACHE — buy upgrades with coins, then press Enter to descend:");
+            GUI.color = Color.white;
+            for (int i = 0; i < 3; i++)
+            {
+                if (boot.cacheOffer == null || i >= boot.cacheOffer.Length) break;
+                var b = Boons.All[boot.cacheOffer[i]];
+                bool bought = boot.cacheBought != null && i < boot.cacheBought.Length && boot.cacheBought[i];
+                bool afford = player.coins >= b.price;
+                GUI.color = bought ? new Color(0.5f, 0.85f, 0.5f) : (afford ? Color.white : new Color(0.6f, 0.6f, 0.6f));
+                string tail = bought ? "(owned)" : b.price + "c";
+                GUI.Label(new Rect(28, 96 + i * 22, 940, 22), "[" + (i + 1) + "]  " + b.name + " — " + b.desc + "    " + tail);
+            }
+            GUI.color = Color.white;
+            return;
+        }
+
         GUI.Label(new Rect(12, 74, 980, 22),
             "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD: move · Space/LMB: attack · Shift: dash · R: re-roll");
 

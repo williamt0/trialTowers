@@ -9,6 +9,9 @@ public class Bootstrap : MonoBehaviour
     // (a fresh Unity 6 default), which makes UnityEngine.Input throw. The HUD shows the fix.
     public static bool InputReady = true;
 
+    // True while the player is browsing the gatekeeper's cache at the portal — freezes the player.
+    public static bool Paused;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
@@ -21,6 +24,11 @@ public class Bootstrap : MonoBehaviour
     public bool nearBoss;
     public bool parleyOpen;
     public int bribeCost;
+
+    // cache (upgrade-shop) state surfaced to the HUD, between beating the portal and descending
+    public bool choosing;
+    public int[] cacheOffer;
+    public bool[] cacheBought = new bool[3];
 
     GameObject worldRoot;
     Player player;
@@ -64,9 +72,50 @@ public class Bootstrap : MonoBehaviour
 
     void Update()
     {
-        if (descendPending) { descendPending = false; floorNum++; Regenerate(); }
+        // stepping into the portal opens the cache instead of descending immediately
+        if (descendPending) { descendPending = false; OpenCache(); }
+        if (choosing) { Cache(); return; }   // browsing the cache: ignore parley, hold the floor
         if (InputReady && Input.GetKeyDown(KeyCode.R)) Regenerate();
         Parley();
+    }
+
+    void OpenCache()
+    {
+        choosing = true;
+        Paused = true;
+        Time.timeScale = 0f;          // freeze the floor so nothing chips the player mid-menu (Update/Input still run)
+        cacheOffer = Boons.RollOffer();
+        cacheBought = new bool[3];
+    }
+
+    // browse the gatekeeper's cache: buy any boons you can afford (each once), then Enter to descend
+    void Cache()
+    {
+        if (!InputReady) { CloseCacheAndDescend(); return; }   // can't read keys — just go
+        for (int i = 0; i < 3; i++)
+        {
+            KeyCode key = KeyCode.Alpha1 + i;
+            if (Input.GetKeyDown(key) && !cacheBought[i])
+            {
+                var boon = Boons.All[cacheOffer[i]];
+                if (player != null && player.coins >= boon.price)
+                {
+                    player.coins -= boon.price;
+                    boon.apply(player);
+                    cacheBought[i] = true;
+                }
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            CloseCacheAndDescend();
+    }
+
+    void CloseCacheAndDescend()
+    {
+        choosing = false;
+        Paused = false;
+        floorNum++;
+        Regenerate();   // also restores timeScale
     }
 
     // gatekeeper parley: face a neutral boss to bribe it or challenge it (you can also just attack it to fight)
@@ -98,12 +147,15 @@ public class Bootstrap : MonoBehaviour
 
     void Regenerate()
     {
+        Time.timeScale = 1f;   // unfreeze if we came from the cache (or an R re-roll mid-pause)
         if (worldRoot != null) Destroy(worldRoot);
         worldRoot = new GameObject("World");
         Vector2 spawn = WorldGen.Generate(worldRoot.transform, player != null ? player.transform : null, QueueDescend, floorNum);
         currentBoss = worldRoot.GetComponentInChildren<Boss>();
         parleyOpen = false;
         nearBoss = false;
+        choosing = false;
+        Paused = false;   // never leave the player frozen after a rebuild
         if (player != null)
         {
             player.transform.position = new Vector3(spawn.x, spawn.y, 0f);
