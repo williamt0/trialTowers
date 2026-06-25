@@ -6,9 +6,11 @@ using UnityEngine;
 public class Pickup : MonoBehaviour
 {
     public int healAmount, coinAmount;
+    const float MagnetR = 3.6f;   // starts homing toward the player within this range
 
     Vector3 home;
     float t;
+    bool collected;
 
     void Awake()
     {
@@ -21,13 +23,32 @@ public class Pickup : MonoBehaviour
     void Update()
     {
         t += Time.deltaTime;
+        var hero = Bootstrap.Hero;
+        if (hero != null && !hero.dead && !Bootstrap.Paused)
+        {
+            float d = Vector2.Distance(transform.position, hero.transform.position);
+            if (d < 0.55f) { Collect(hero); return; }        // close enough — grab it (robust even if the trigger doesn't re-fire)
+            if (d < MagnetR)
+            {
+                float pull = Mathf.Lerp(9f, 3.5f, d / MagnetR);   // accelerates as it nears
+                transform.position = Vector3.MoveTowards(transform.position, hero.transform.position, pull * Time.deltaTime);
+                home = transform.position;                    // re-anchor the bob so it doesn't snap back if it leaves range
+                return;
+            }
+        }
         transform.position = home + Vector3.up * (0.12f * Mathf.Sin(t * 4f));
     }
 
     void OnTriggerEnter2D(Collider2D c)
     {
         var p = c.GetComponent<Player>();
-        if (p == null || p.dead) return;
+        if (p != null && !p.dead) Collect(p);
+    }
+
+    void Collect(Player p)
+    {
+        if (collected) return;   // guard against trigger + proximity firing in the same frame
+        collected = true;
         if (healAmount > 0) p.hp = Mathf.Min(p.maxHp, p.hp + healAmount);
         if (coinAmount > 0) p.coins += coinAmount;
         CameraFollow.Kick(0.04f);

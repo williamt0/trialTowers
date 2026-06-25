@@ -15,6 +15,9 @@ public class Bootstrap : MonoBehaviour
     // The current floor's container, so the top-level Player can parent its shots into it (cleaned up on regen).
     public static Transform WorldRoot;
 
+    // The live player, so pickups can home in on it (reassigned when RestartRun rebuilds the player).
+    public static Player Hero;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
@@ -240,6 +243,8 @@ public class Bootstrap : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
         go.AddComponent<BoxCollider2D>();
-        return go.AddComponent<Player>();
+        var pc = go.AddComponent<Player>();
+        Hero = pc;
+        return pc;
     }
 }
