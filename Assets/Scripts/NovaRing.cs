@@ -28,7 +28,12 @@ public class NovaRing : MonoBehaviour
 
     public static void Spawn(Transform parent, Vector2 pos, float radius)
     {
-        var go = SpriteFactory.Quad("Nova", pos, Vector2.one, new Color(0.5f, 0.85f, 1f, 0.5f), 7);
+        Spawn(parent, pos, radius, new Color(0.5f, 0.85f, 1f, 0.5f));
+    }
+
+    public static void Spawn(Transform parent, Vector2 pos, float radius, Color col)
+    {
+        var go = SpriteFactory.Quad("Ring", pos, Vector2.one, col, 7);
         if (parent != null) go.transform.SetParent(parent);
         go.AddComponent<NovaRing>().maxR = radius;   // static method of the same class may set the private field
     }

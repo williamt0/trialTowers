@@ -73,6 +73,8 @@ public class Player : MonoBehaviour
         {
             var w = h.GetComponent<Wall>();
             if (w != null) { w.TakeDamage(atkDmg * 0.6f + 8f); continue; }
+            var pr = h.GetComponent<Prop>();
+            if (pr != null) { pr.TakeDamage(atkDmg, rb.position); continue; }
             var e = h.GetComponent<Enemy>();
             if (e != null) { e.TakeDamage(atkDmg, rb.position); continue; }
             var b = h.GetComponent<Boss>();
@@ -98,6 +100,8 @@ public class Player : MonoBehaviour
         {
             var w = h.GetComponent<Wall>();
             if (w != null) { w.TakeDamage(novaDmg); continue; }
+            var pr = h.GetComponent<Prop>();
+            if (pr != null) { pr.TakeDamage(novaDmg, c); continue; }
             var e = h.GetComponent<Enemy>();
             if (e != null) { e.TakeDamage(novaDmg, c); continue; }
             var b = h.GetComponent<Boss>();

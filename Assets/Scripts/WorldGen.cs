@@ -64,6 +64,15 @@ public static class WorldGen
                 Room(root, rx, ry, roomW - 1f, roomH - 1f, k.tier);
                 var prop = SpriteFactory.Quad(k.name, new Vector2(rx, ry), new Vector2(1.3f, 1.3f), k.col, 0);
                 prop.transform.SetParent(root);
+
+                // destructible crates/barrels scattered in the room interior (kept well off the walls + gate)
+                int props = Random.Range(0, 4);
+                for (int pi = 0; pi < props; pi++)
+                {
+                    Vector2 ppos = new Vector2(rx + Random.Range(-roomW * 0.28f, roomW * 0.28f),
+                                               ry + Random.Range(-roomH * 0.28f, roomH * 0.28f));
+                    Prop.Spawn(root, ppos, Random.value < 0.35f);   // ~35% barrels
+                }
             }
 
         // a reinforced vault in the centre alley

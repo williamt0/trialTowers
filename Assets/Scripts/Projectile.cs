@@ -34,13 +34,15 @@ public class Projectile : MonoBehaviour
             if (e != null) { e.TakeDamage(dmg, transform.position); Destroy(gameObject); return; }
             var b = c.GetComponent<Boss>();
             if (b != null) { b.TakeDamage(dmg, transform.position); Destroy(gameObject); return; }
+            var pr = c.GetComponent<Prop>();
+            if (pr != null) { pr.TakeDamage(dmg, transform.position); Destroy(gameObject); return; }   // pop crates/barrels from range
         }
         else
         {
             var p = c.GetComponent<Player>();
             if (p != null) { p.Hurt(dmg, transform.position); Destroy(gameObject); return; }
         }
-        if (c.GetComponent<Wall>() != null) Destroy(gameObject);   // blocked by walls (any tier), either side
+        if (c.GetComponent<Wall>() != null || c.GetComponent<Prop>() != null) Destroy(gameObject);   // walls + props block any shot (cover)
     }
 
     public static void Spawn(Transform parent, Vector2 pos, Vector2 vel, float dmg, Color col, bool friendly = false)
