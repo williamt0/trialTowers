@@ -18,7 +18,9 @@ public class Bootstrap : MonoBehaviour
         new GameObject("TrialTowers").AddComponent<Bootstrap>();
     }
 
+    public const int FinalFloor = 10;   // Tower's Crown — beating its gatekeeper wins the run
     public int floorNum = 1;
+    public bool won;
 
     // parley state surfaced to the HUD
     public bool nearBoss;
@@ -72,11 +74,38 @@ public class Bootstrap : MonoBehaviour
 
     void Update()
     {
+        if (won) { if (InputReady && Input.GetKeyDown(KeyCode.R)) RestartRun(); return; }   // run cleared — only a fresh run from here
         // stepping into the portal opens the cache instead of descending immediately
-        if (descendPending) { descendPending = false; OpenCache(); }
+        if (descendPending)
+        {
+            descendPending = false;
+            if (floorNum >= FinalFloor) { Win(); return; }   // beat the top floor's gatekeeper -> victory, no further descent
+            OpenCache();
+        }
         if (choosing) { Cache(); return; }   // browsing the cache: ignore parley, hold the floor
         if (InputReady && Input.GetKeyDown(KeyCode.R)) Regenerate();
         Parley();
+    }
+
+    void Win()
+    {
+        won = true;
+        Paused = true;
+        Time.timeScale = 0f;   // freeze the cleared floor under the victory banner
+    }
+
+    void RestartRun()
+    {
+        won = false;
+        Paused = false;
+        Time.timeScale = 1f;
+        floorNum = 1;
+        if (player != null) Destroy(player.gameObject);   // rebuild a clean player so boons/coins reset
+        player = MakePlayer();
+        var follow = cam != null ? cam.GetComponent<CameraFollow>() : null;
+        if (follow != null) follow.target = player.transform;
+        if (hud != null) hud.player = player;
+        Regenerate();
     }
 
     void OpenCache()

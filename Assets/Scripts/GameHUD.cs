@@ -19,6 +19,22 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
+        if (boot != null && boot.won)
+        {
+            var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+            cs.fontSize = 24;
+            GUI.color = new Color(0.96f, 0.86f, 0.42f);
+            GUI.Label(new Rect(0, Screen.height / 2f - 64f, Screen.width, 36), "YOU REACHED THE TOWER'S CROWN", cs);
+            cs.fontSize = 15;
+            GUI.color = new Color(0.85f, 0.85f, 0.92f);
+            GUI.Label(new Rect(0, Screen.height / 2f - 16f, Screen.width, 24),
+                "Floor " + Bootstrap.FinalFloor + " conquered — the dimensions beyond await another climb.", cs);
+            GUI.Label(new Rect(0, Screen.height / 2f + 14f, Screen.width, 24),
+                "Coins banked: " + (player != null ? player.coins : 0) + "        Press R to begin a new run.", cs);
+            GUI.color = Color.white;
+            return;
+        }
+
         if (player != null && player.hurtFlash > 0f)
         {
             var prevc = GUI.color;
