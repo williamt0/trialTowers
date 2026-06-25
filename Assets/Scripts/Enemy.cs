@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class Enemy : MonoBehaviour
 {
+    public int kind;        // 0 chaser, 1 ranged-kiter, 2 brute
     public float hp = 30f;
     public float speed = 2.4f;
     public float touchDmg = 14f;
@@ -11,7 +12,7 @@ public class Enemy : MonoBehaviour
     SpriteRenderer sr;
     Color baseCol;
     Transform target;
-    float flashT, knockT;
+    float flashT, knockT, shootCd;
     Vector2 knockV;
 
     void Awake()
@@ -21,18 +22,32 @@ public class Enemy : MonoBehaviour
         if (sr != null) baseCol = sr.color;
     }
 
-    public void Init(Transform player, int floorNum)
+    public void Init(Transform player, int floorNum, int k)
     {
         target = player;
+        kind = k;
         int f = Mathf.Max(0, floorNum - 1);
-        hp = 25f + 8f * f;             // tougher each floor
-        speed = 2.2f + 0.08f * f;
-        touchDmg = 12f + 2.5f * f;
+        if (k == 1)       { hp = 18f + 6f * f;  speed = 2.3f; touchDmg = 8f + 2f * f; }                                              // ranged
+        else if (k == 2)  { hp = 60f + 18f * f; speed = 1.4f; touchDmg = 20f + 4f * f; transform.localScale = new Vector3(1.3f, 1.3f, 1f); }  // brute
+        else              { hp = 25f + 8f * f;  speed = 2.5f; touchDmg = 12f + 2.5f * f; }                                           // chaser
+        shootCd = Random.Range(0.5f, 1.6f);
     }
 
     void Update()
     {
         if (flashT > 0f) { flashT -= Time.deltaTime; if (flashT <= 0f && sr != null) sr.color = baseCol; }
+
+        if (kind == 1 && target != null)
+        {
+            shootCd -= Time.deltaTime;
+            float d = Vector2.Distance(transform.position, target.position);
+            if (shootCd <= 0f && d < 13f && d > 2f)
+            {
+                Vector2 dir = ((Vector2)target.position - (Vector2)transform.position).normalized;
+                Projectile.Spawn(transform.parent, (Vector2)transform.position + dir * 0.7f, dir * 7.5f, touchDmg, new Color(1f, 0.55f, 0.3f));
+                shootCd = 1.6f;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -40,9 +55,21 @@ public class Enemy : MonoBehaviour
         if (rb == null) return;
         if (knockT > 0f) { knockT -= Time.fixedDeltaTime; rb.linearVelocity = knockV; knockV *= 0.86f; return; }
         if (target == null) { rb.linearVelocity = Vector2.zero; return; }
+
         Vector2 to = (Vector2)target.position - rb.position;
-        float d = to.magnitude;
-        rb.linearVelocity = (d < 11f && d > 0.7f) ? to.normalized * speed : Vector2.zero;
+        float dist = to.magnitude;
+        Vector2 n = dist > 0.001f ? to / dist : Vector2.zero;
+
+        if (kind == 1)        // ranged: kite at mid-range
+        {
+            if (dist < 5f) rb.linearVelocity = -n * speed;
+            else if (dist > 9f) rb.linearVelocity = n * speed;
+            else rb.linearVelocity = Vector2.zero;
+        }
+        else                  // chaser / brute: rush
+        {
+            rb.linearVelocity = (dist < 13f && dist > 0.7f) ? n * speed : Vector2.zero;
+        }
     }
 
     void OnCollisionStay2D(Collision2D c)
@@ -55,13 +82,13 @@ public class Enemy : MonoBehaviour
     {
         if (sr != null) sr.color = Color.white;
         flashT = 0.1f;
-        knockV = ((Vector2)transform.position - from).normalized * 6f;
+        knockV = ((Vector2)transform.position - from).normalized * (kind == 2 ? 3f : 6f);   // brutes resist knockback
         knockT = 0.14f;
         hp -= d;
         if (hp <= 0f)
         {
             CameraFollow.Kick(0.12f);
-            Pickup.Spawn(transform.parent, transform.position, 0, 5, new Color(0.95f, 0.8f, 0.3f));   // coin orb
+            Pickup.Spawn(transform.parent, transform.position, 0, kind == 2 ? 10 : 5, new Color(0.95f, 0.8f, 0.3f));   // coin orb
             if (Random.value < 0.3f)
                 Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb
             Destroy(gameObject);
