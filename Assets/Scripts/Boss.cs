@@ -2,8 +2,8 @@ using UnityEngine;
 
 // The floor's gatekeeper. Guards the portal inside the boss chamber. Neutral until provoked,
 // so you can approach to parley (bribe it to stand aside) or just fight it. Either way the portal opens.
-// Once provoked it chases and, on a cooldown, freezes to telegraph a ranged attack — a radial ring
-// or an aimed fan of projectiles — then enrages (faster, denser bursts) below a third HP.
+// Once provoked it chases and, on a cooldown, freezes to telegraph an attack — a radial ring,
+// an aimed fan, or (act III+) a committed charge — then enrages (faster, denser bursts) below a third HP.
 [RequireComponent(typeof(Rigidbody2D))]
 public class Boss : MonoBehaviour
 {
@@ -23,6 +23,9 @@ public class Boss : MonoBehaviour
     int pendingPattern;
     bool enraged;
     Vector2 knockV;
+    int floor;
+    float chargeT, chargeSpeed = 11f;
+    Vector2 chargeDir;
 
     void Awake()
     {
@@ -41,6 +44,8 @@ public class Boss : MonoBehaviour
         shotDmg = 10f + 2.5f * f;
         cost = 30 + 12 * f;
         atkCd = 2.2f;                     // a brief grace before the first volley
+        floor = floorNum;
+        chargeSpeed = 10f + 0.4f * f;
     }
 
     public void Provoke() { provoked = true; }
@@ -52,12 +57,20 @@ public class Boss : MonoBehaviour
     }
 
     bool Winding => windT > 0f;
+    bool Charging => chargeT > 0f;
 
     void Update()
     {
         // hit-flash decay (skip the restore while winding — the telegraph drives the colour then)
         if (flashT > 0f) { flashT -= Time.deltaTime; if (flashT <= 0f && !Winding && sr != null) sr.color = baseCol; }
         if (!provoked || target == null) return;
+
+        if (Charging)   // mid-lunge: ride it out, then recover
+        {
+            chargeT -= Time.deltaTime;
+            if (chargeT <= 0f) atkCd = enraged ? 1.6f : 2.8f;
+            return;
+        }
 
         if (Winding)
         {
@@ -67,7 +80,7 @@ public class Boss : MonoBehaviour
             {
                 FirePattern(pendingPattern);
                 if (sr != null && flashT <= 0f) sr.color = baseCol;
-                atkCd = enraged ? 1.5f : 2.6f;
+                if (pendingPattern != 2) atkCd = enraged ? 1.5f : 2.6f;   // a charge sets its own cd when it ends
             }
             return;
         }
@@ -76,9 +89,16 @@ public class Boss : MonoBehaviour
         float dist = Vector2.Distance(transform.position, target.position);
         if (atkCd <= 0f && dist < 16f)
         {
-            pendingPattern = Random.value < 0.5f ? 0 : 1;
-            windT = enraged ? 0.38f : 0.5f;     // freeze and flash before the shot
+            pendingPattern = PickPattern();
+            windT = enraged ? 0.38f : 0.5f;     // freeze and flash before the attack
         }
+    }
+
+    // act III+ gatekeepers fold a charge into the ring/fan mix; lower floors stay purely ranged
+    int PickPattern()
+    {
+        if (floor >= 7 && Random.value < 0.33f) return 2;   // charge
+        return Random.value < 0.5f ? 0 : 1;                 // ring or fan
     }
 
     void FixedUpdate()
@@ -86,6 +106,7 @@ public class Boss : MonoBehaviour
         if (rb == null) return;
         if (knockT > 0f) { knockT -= Time.fixedDeltaTime; rb.linearVelocity = knockV; knockV *= 0.88f; return; }
         if (!provoked || target == null || Winding) { rb.linearVelocity = Vector2.zero; return; }   // guard / stand still to wind up
+        if (Charging) { rb.linearVelocity = chargeDir * chargeSpeed; return; }                       // lunge in the locked direction
         Vector2 to = (Vector2)target.position - rb.position;
         float d = to.magnitude;
         rb.linearVelocity = (d < 15f && d > 1.0f) ? to.normalized * speed : Vector2.zero;
@@ -95,9 +116,17 @@ public class Boss : MonoBehaviour
     {
         Vector2 origin = transform.position;
         Color shotCol = new Color(1f, 0.5f, 0.25f);
+        if (pattern == 2)   // committed charge: lock onto the player's position and lunge
+        {
+            chargeDir = ((Vector2)target.position - origin).normalized;
+            if (chargeDir.sqrMagnitude < 0.01f) chargeDir = Vector2.down;
+            chargeT = 0.55f;
+            CameraFollow.Kick(0.2f);
+            return;
+        }
         if (pattern == 0)   // radial ring
         {
-            int n = enraged ? 14 : 10;
+            int n = (enraged ? 14 : 10) + (floor >= 8 ? 4 : 0);   // denser in the final act
             float off = Random.value * Mathf.PI;   // rotate the ring a little each time
             for (int i = 0; i < n; i++)
             {
@@ -110,7 +139,7 @@ public class Boss : MonoBehaviour
         {
             Vector2 aim = ((Vector2)target.position - origin).normalized;
             if (aim.sqrMagnitude < 0.01f) aim = Vector2.down;
-            int shots = enraged ? 5 : 3;
+            int shots = (enraged ? 5 : 3) + (floor >= 8 ? 2 : 0);
             float spread = 14f;   // degrees between shots
             for (int i = 0; i < shots; i++)
             {
