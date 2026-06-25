@@ -26,6 +26,7 @@ public static class WorldGen
     public static int BossCell = -1;                               // index into RoomCenters of the gatekeeper's chamber
     public static Vector2 RoomSize;                                // room footprint, for drawing the cells
     public static readonly Vector2 WorldHalf = new Vector2(HW, HH);   // world half-extents, for normalising positions
+    public static Vector2 PortalPos;                               // the exit portal's world position (for the HUD objective arrow)
 
     public static Vector2 Generate(Transform root, Transform player, System.Action onDescend, int floorNum)
     {
@@ -177,7 +178,8 @@ public static class WorldGen
         Floor(root, new Vector2(cx, cy), new Vector2(w + 1f, h + 1f), new Color(0.22f, 0.13f, 0.14f), -4);
         Room(root, cx, cy, w, h, 2);   // reinforced walls, one gate
 
-        var portalGo = SpriteFactory.Quad("Portal", new Vector2(cx, cy + 1.5f), new Vector2(1.6f, 1.6f), new Color(0.18f, 0.18f, 0.26f), 5);
+        PortalPos = new Vector2(cx, cy + 1.5f);   // published for the HUD objective arrow
+        var portalGo = SpriteFactory.Quad("Portal", PortalPos, new Vector2(1.6f, 1.6f), new Color(0.18f, 0.18f, 0.26f), 5);
         portalGo.transform.SetParent(root);
         var portal = portalGo.AddComponent<Portal>();
         portal.onEnter = onDescend;

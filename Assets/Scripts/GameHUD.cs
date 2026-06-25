@@ -139,7 +139,49 @@ public class GameHUD : MonoBehaviour
 
         BossBar();
         Minimap();
+        ObjectiveArrow();
         FloorBanner();
+    }
+
+    // once the gatekeeper is down (portal open <=> CurrentBoss == null), a chevron guides the player back
+    // to the exit — clamped to the screen edge when the portal is off-screen, hovering over it when on-screen.
+    // Deliberately silent BEFORE the boss falls, so it never reveals the hidden chamber's location.
+    void ObjectiveArrow()
+    {
+        if (boot == null || boot.CurrentBoss != null) return;
+        var cam = Camera.main;
+        if (cam == null) return;
+
+        Vector3 sp = cam.WorldToScreenPoint(WorldGen.PortalPos);
+        Vector2 target = new Vector2(sp.x, Screen.height - sp.y);                 // screen (bottom-left) -> GUI (top-left)
+        Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+        bool onScreen = sp.z > 0f && sp.x >= 0f && sp.x <= Screen.width && sp.y >= 0f && sp.y <= Screen.height;
+
+        Vector2 dir = target - center;
+        if (dir.sqrMagnitude < 0.0001f) dir = Vector2.up;
+        dir.Normalize();
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;                  // GUI y is down -> matches RotateAroundPivot
+
+        Vector2 pos;
+        if (onScreen)
+        {
+            pos = target - new Vector2(0f, 26f);   // float just above the portal
+        }
+        else
+        {
+            float halfW = Screen.width * 0.5f - 46f, halfH = Screen.height * 0.5f - 46f;
+            float sx = Mathf.Abs(dir.x) < 1e-4f ? float.MaxValue : halfW / Mathf.Abs(dir.x);
+            float sy = Mathf.Abs(dir.y) < 1e-4f ? float.MaxValue : halfH / Mathf.Abs(dir.y);
+            pos = center + dir * Mathf.Min(sx, sy);   // clamp to the inset screen-edge ring
+        }
+
+        var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 28 };
+        Matrix4x4 saved = GUI.matrix;
+        GUIUtility.RotateAroundPivot(angle, pos);     // the glyph points +x at angle 0; rotate it toward the portal
+        GUI.color = new Color(0.5f, 0.9f, 1f, 0.92f);
+        GUI.Label(new Rect(pos.x - 20f, pos.y - 16f, 40f, 32f), "▶", style);   // ▶
+        GUI.matrix = saved;
+        GUI.color = Color.white;
     }
 
     // fog tracking for the minimap: reset on a fresh floor build (incl. R-reroll, via WorldGen.Gen),
