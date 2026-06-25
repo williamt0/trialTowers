@@ -13,15 +13,22 @@ public class Player : MonoBehaviour
     public float rangedDmg = 16f, rangedCd = 0.5f;
     public float novaDmg = 26f, novaCd = 6f, novaRadius = 3.6f;
 
+    public int killStreak;          // Momentum: consecutive kills within the window
+    public float momWindow = 4f;    // seconds a kill keeps the streak alive
+
     Rigidbody2D rb;
     Vector2 face = Vector2.down;
-    float cd, iframe, knockT, dashT, dashCdT, rangedCdT, burnCd, novaCdT;
+    float cd, iframe, knockT, dashT, dashCdT, rangedCdT, burnCd, novaCdT, momTimer;
     Vector2 knockV, dashDir;
 
     // 0..1 cooldown readiness for the HUD pips (1 = ready)
     public float DashReady { get { return dashCd > 0f ? Mathf.Clamp01(1f - dashCdT / dashCd) : 1f; } }
     public float RangedReady { get { return rangedCd > 0f ? Mathf.Clamp01(1f - rangedCdT / rangedCd) : 1f; } }
     public float NovaReady { get { return novaCd > 0f ? Mathf.Clamp01(1f - novaCdT / novaCd) : 1f; } }
+    public float CoinMult { get { return 1f + Mathf.Min(killStreak, 20) * 0.1f; } }   // 1x .. 3x
+
+    public void RegisterKill() { killStreak++; momTimer = momWindow; }
+    public void ResetMomentum() { killStreak = 0; momTimer = 0f; }
 
     void Awake()
     {
@@ -37,6 +44,7 @@ public class Player : MonoBehaviour
         if (rangedCdT > 0f) rangedCdT -= Time.deltaTime;
         if (burnCd > 0f) burnCd -= Time.deltaTime;
         if (novaCdT > 0f) novaCdT -= Time.deltaTime;
+        if (momTimer > 0f) { momTimer -= Time.deltaTime; if (momTimer <= 0f) killStreak = 0; }   // streak lapses on a no-kill window
         if (dead || !Bootstrap.InputReady || Bootstrap.Paused) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
@@ -122,6 +130,7 @@ public class Player : MonoBehaviour
         {
             dead = true;
             if (rb != null) rb.linearVelocity = Vector2.zero;
+            ResetMomentum();
         }
     }
 
@@ -140,6 +149,7 @@ public class Player : MonoBehaviour
             dead = true;
             knockT = 0f;
             if (rb != null) rb.linearVelocity = Vector2.zero;
+            ResetMomentum();
         }
     }
 }

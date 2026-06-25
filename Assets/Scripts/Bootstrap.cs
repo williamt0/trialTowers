@@ -215,6 +215,7 @@ public class Bootstrap : MonoBehaviour
             if (rb != null) rb.linearVelocity = Vector2.zero;
             player.hp = player.maxHp;
             player.dead = false;
+            player.ResetMomentum();   // momentum never carries across a floor build (descend / reroll / restart)
         }
         if (hud != null) hud.floor = floorNum;
 

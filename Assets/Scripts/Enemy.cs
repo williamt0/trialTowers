@@ -123,6 +123,8 @@ public class Enemy : MonoBehaviour
             else
             {
                 int coin = (kind == 2 ? 10 : 5) + (elite ? 15 : 0);
+                var hero = Bootstrap.Hero;
+                if (hero != null) { coin = Mathf.RoundToInt(coin * hero.CoinMult); hero.RegisterKill(); }   // momentum: scale by streak, then extend it
                 Pickup.Spawn(transform.parent, transform.position, 0, coin, new Color(0.95f, 0.8f, 0.3f));   // coin orb (elites pay more)
                 if (elite || Random.value < 0.3f)
                     Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, elite ? 35 : 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb (guaranteed from elites)

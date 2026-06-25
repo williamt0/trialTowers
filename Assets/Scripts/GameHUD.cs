@@ -268,6 +268,14 @@ public class GameHUD : MonoBehaviour
         Pip(322f, "DASH", player.DashReady);
         Pip(392f, "SHOT", player.RangedReady);
         Pip(462f, "NOVA", player.NovaReady);
+
+        if (player.killStreak > 1)   // Momentum readout (right of the pips; appears once a streak is building)
+        {
+            var ms = new GUIStyle(GUI.skin.label) { fontSize = 13, fontStyle = FontStyle.Bold };
+            GUI.color = new Color(1f, 0.8f, 0.4f);
+            GUI.Label(new Rect(534, 53, 130, 18), "x" + player.CoinMult.ToString("0.0") + "  ×" + player.killStreak, ms);
+            GUI.color = Color.white;
+        }
     }
 
     void Pip(float x, string label, float ready)
