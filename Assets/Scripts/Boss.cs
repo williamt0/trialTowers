@@ -75,7 +75,12 @@ public class Boss : MonoBehaviour
         if (Winding)
         {
             windT -= Time.deltaTime;
-            if (sr != null) sr.color = Color.Lerp(baseCol, Color.white, Mathf.PingPong(Time.time * 12f, 1f));   // pulsing tell
+            // pulsing tell — red for an incoming charge, white for a ranged volley, so the player can read it
+            if (sr != null)
+            {
+                Color tell = pendingPattern == 2 ? new Color(1f, 0.28f, 0.18f) : Color.white;
+                sr.color = Color.Lerp(baseCol, tell, Mathf.PingPong(Time.time * 12f, 1f));
+            }
             if (windT <= 0f)
             {
                 FirePattern(pendingPattern);
