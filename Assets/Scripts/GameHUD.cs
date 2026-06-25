@@ -12,11 +12,17 @@ public class GameHUD : MonoBehaviour
     int lastFloor;          // 0 so the first floor (1) also triggers the intro banner
     float bannerT;
 
+    int lastGen = -1;       // WorldGen.Gen of the floor whose minimap fog we're tracking
+    bool[] visited;         // room cells the player has entered this floor
+    bool bossFound;         // revealed the gatekeeper's chamber on the minimap
+    float mmX, mmY, mmW, mmH;   // current minimap rect, set each draw
+
     void Update()
     {
         if (boot != null && boot.title) return;   // hold the floor banner until the run actually begins
         if (floor != lastFloor) { lastFloor = floor; bannerT = BannerDur; }   // new floor reached -> play the intro
         if (bannerT > 0f) bannerT -= Time.deltaTime;
+        TrackMinimap();
     }
 
     void OnGUI()
@@ -132,7 +138,74 @@ public class GameHUD : MonoBehaviour
         }
 
         BossBar();
+        Minimap();
         FloorBanner();
+    }
+
+    // fog tracking for the minimap: reset on a fresh floor build (incl. R-reroll, via WorldGen.Gen),
+    // then mark the room cell the player currently stands in (and reveal the boss chamber if entered)
+    void TrackMinimap()
+    {
+        var rc = WorldGen.RoomCenters;
+        if (rc == null) return;
+        if (WorldGen.Gen != lastGen || visited == null || visited.Length != rc.Length)
+        {
+            lastGen = WorldGen.Gen;
+            visited = new bool[rc.Length];
+            bossFound = false;
+        }
+        var hero = Bootstrap.Hero;
+        if (hero == null) return;
+        Vector2 p = hero.transform.position;
+        Vector2 hs = WorldGen.RoomSize * 0.5f;
+        for (int i = 0; i < rc.Length; i++)
+            if (Mathf.Abs(p.x - rc[i].x) <= hs.x && Mathf.Abs(p.y - rc[i].y) <= hs.y)
+            {
+                visited[i] = true;
+                if (i == WorldGen.BossCell) bossFound = true;
+            }
+    }
+
+    Vector2 WorldToMini(float wx, float wy)
+    {
+        Vector2 wh = WorldGen.WorldHalf;
+        float nx = (wx + wh.x) / (2f * wh.x);
+        float ny = (wy + wh.y) / (2f * wh.y);
+        return new Vector2(mmX + nx * mmW, mmY + (1f - ny) * mmH);   // invert y (world up -> screen down)
+    }
+
+    // a top-right radar: room cells (explored brighter; boss chamber revealed red once entered) + the player dot
+    void Minimap()
+    {
+        var rc = WorldGen.RoomCenters;
+        if (rc == null || visited == null || visited.Length != rc.Length) return;
+
+        mmW = 150f; mmH = 96f;
+        mmX = Screen.width - mmW - 10f; mmY = 10f;
+
+        GUI.color = new Color(0f, 0f, 0f, 0.5f);
+        GUI.DrawTexture(new Rect(mmX - 3f, mmY - 3f, mmW + 6f, mmH + 6f), Texture2D.whiteTexture);
+
+        Vector2 hs = WorldGen.RoomSize * 0.5f;
+        for (int i = 0; i < rc.Length; i++)
+        {
+            Vector2 tl = WorldToMini(rc[i].x - hs.x, rc[i].y + hs.y);
+            Vector2 br = WorldToMini(rc[i].x + hs.x, rc[i].y - hs.y);
+            bool isBoss = i == WorldGen.BossCell;
+            if (isBoss && bossFound) GUI.color = new Color(0.88f, 0.3f, 0.25f, 0.95f);   // revealed gatekeeper chamber
+            else if (visited[i])     GUI.color = new Color(0.55f, 0.62f, 0.7f, 0.9f);    // explored
+            else                     GUI.color = new Color(0.26f, 0.29f, 0.35f, 0.85f);  // unexplored (the boss hides among these)
+            GUI.DrawTexture(new Rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y), Texture2D.whiteTexture);
+        }
+
+        var hero = Bootstrap.Hero;
+        if (hero != null)
+        {
+            Vector2 pp = WorldToMini(hero.transform.position.x, hero.transform.position.y);
+            GUI.color = new Color(0.55f, 0.85f, 1f);
+            GUI.DrawTexture(new Rect(pp.x - 2.5f, pp.y - 2.5f, 5f, 5f), Texture2D.whiteTexture);
+        }
+        GUI.color = Color.white;
     }
 
     // player vitals: colour-coded HP bar + numeric, coins, and dash / ranged cooldown pips

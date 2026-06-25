@@ -20,6 +20,13 @@ public static class WorldGen
         new RoomKind { name = "Vault",  tint = new Color(0.22f, 0.14f, 0.14f), col = new Color(0.92f, 0.80f, 0.34f), tier = 2 },
     };
 
+    // --- layout snapshot for the HUD minimap, published on every Generate ---
+    public static int Gen;                                          // bumps each floor build (incl. R-reroll) so the HUD can reset its fog
+    public static Vector2[] RoomCenters;                            // row-major centres of the rows*cols room cells
+    public static int BossCell = -1;                               // index into RoomCenters of the gatekeeper's chamber
+    public static Vector2 RoomSize;                                // room footprint, for drawing the cells
+    public static readonly Vector2 WorldHalf = new Vector2(HW, HH);   // world half-extents, for normalising positions
+
     public static Vector2 Generate(Transform root, Transform player, System.Action onDescend, int floorNum)
     {
         var realm = Realms.For(floorNum);
@@ -86,6 +93,16 @@ public static class WorldGen
             if (Mathf.Abs(hx) < 4.5f && Mathf.Abs(hy) < 4.5f) hx += 9f;                                      // keep off the central vault
             Hazard(root, new Vector2(hx, hy), Random.Range(2.6f, 3.6f));
         }
+
+        // publish a layout snapshot for the HUD minimap (recomputed from the same grid params)
+        var centers = new Vector2[rows * cols];
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                centers[r * cols + c] = new Vector2(x0 + c * (roomW + gapX), y0 + r * (roomH + gapY));
+        RoomCenters = centers;
+        BossCell = bossR * cols + bossC;
+        RoomSize = new Vector2(roomW, roomH);
+        Gen++;
 
         return new Vector2(-HW + 5f, 0f);   // west-edge entrance
     }
