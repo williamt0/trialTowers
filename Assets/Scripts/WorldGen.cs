@@ -200,14 +200,16 @@ public static class WorldGen
         go.AddComponent<Hazard>();
     }
 
-    // archetype roll: deeper floors lean harder on ranged kiters and brutes (0 chaser, 1 ranged, 2 brute)
+    // archetype roll: deeper floors lean harder on ranged/brutes/bombers (0 chaser, 1 ranged, 2 brute, 3 bomber)
     static int RollKind(int floorNum)
     {
         float brute = Mathf.Min(0.05f + 0.02f * floorNum, 0.25f);
         float ranged = Mathf.Min(0.24f + 0.02f * floorNum, 0.45f);
+        float bomber = floorNum >= 3 ? Mathf.Min(0.06f + 0.015f * floorNum, 0.18f) : 0f;   // kamikaze from floor 3
         float r = Random.value;
         if (r < brute) return 2;
         if (r < brute + ranged) return 1;
+        if (r < brute + ranged + bomber) return 3;
         return 0;
     }
 

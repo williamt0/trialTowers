@@ -16,6 +16,8 @@ public class Enemy : MonoBehaviour
     Vector2 knockV;
     bool elite;
     bool minion;   // boss-summoned add: drops no loot, decrements Boss.liveMinions on death
+    bool fuseLit, detonated;   // bomber (kind 3): fuse state + one-shot detonation guard
+    float fuseT, blast = 26f;
 
     void Awake()
     {
@@ -31,6 +33,7 @@ public class Enemy : MonoBehaviour
         int f = Mathf.Max(0, floorNum - 1);
         if (k == 1)       { hp = 18f + 6f * f;  speed = 2.3f; touchDmg = 8f + 2f * f; }                                              // ranged
         else if (k == 2)  { hp = 60f + 18f * f; speed = 1.4f; touchDmg = 20f + 4f * f; transform.localScale = new Vector3(1.3f, 1.3f, 1f); }  // brute
+        else if (k == 3)  { hp = 20f + 6f * f;  speed = 3.3f; touchDmg = 0f; blast = 22f + 3f * f; if (sr != null) { baseCol = new Color(0.9f, 0.4f, 0.2f); sr.color = baseCol; } }  // bomber: fast, no contact dmg, explodes
         else              { hp = 25f + 8f * f;  speed = 2.5f; touchDmg = 12f + 2.5f * f; }                                           // chaser
         shootCd = Random.Range(0.5f, 1.6f);
     }
@@ -75,6 +78,20 @@ public class Enemy : MonoBehaviour
                 shootCd = 1.6f;
             }
         }
+
+        if (kind == 3 && !detonated && target != null)   // bomber: rush in, plant, blow
+        {
+            if (!fuseLit)
+            {
+                if (Vector2.Distance(transform.position, target.position) < 1.8f) { fuseLit = true; fuseT = 0.6f; }
+            }
+            else
+            {
+                fuseT -= Time.deltaTime;
+                if (sr != null) sr.color = Color.Lerp(baseCol, Color.white, Mathf.PingPong(Time.time * 18f, 1f));   // fast blink: about to blow
+                if (fuseT <= 0f) Detonate();
+            }
+        }
     }
 
     void FixedUpdate()
@@ -86,6 +103,8 @@ public class Enemy : MonoBehaviour
         Vector2 to = (Vector2)target.position - rb.position;
         float dist = to.magnitude;
         Vector2 n = dist > 0.001f ? to / dist : Vector2.zero;
+
+        if (kind == 3 && fuseLit) { rb.linearVelocity = Vector2.zero; return; }   // bomber planted: hold position through the fuse
 
         if (kind == 1)        // ranged: kite at mid-range
         {
@@ -101,12 +120,30 @@ public class Enemy : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D c)
     {
+        if (touchDmg <= 0f) return;   // bombers do no contact damage; also avoids refreshing the player's i-frames pre-blast
         var p = c.collider.GetComponent<Player>();
         if (p != null) p.Hurt(touchDmg, transform.position);
     }
 
+    // bomber payload: one guarded AoE that also drops loot + feeds Momentum (a bomber is a real kill).
+    // `detonated` is set BEFORE Damage.Explode so a chain reaction that loops back here is a no-op (bounded recursion).
+    void Detonate()
+    {
+        if (detonated) return;
+        detonated = true;
+        Damage.Explode(transform.position, 3.2f, blast);
+        int coin = 5 + (elite ? 15 : 0);
+        var hero = Bootstrap.Hero;
+        if (hero != null) { coin = Mathf.RoundToInt(coin * hero.CoinMult); hero.RegisterKill(); }
+        Pickup.Spawn(transform.parent, transform.position, 0, coin, new Color(0.95f, 0.8f, 0.3f));
+        if (elite || Random.value < 0.3f)
+            Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, elite ? 35 : 20, 0, new Color(0.4f, 0.9f, 0.5f));
+        Destroy(gameObject);
+    }
+
     public void TakeDamage(float d, Vector2 from)
     {
+        if (detonated) return;   // an already-detonating bomber ignores further hits (e.g. from its own/another blast)
         if (sr != null) sr.color = Color.white;
         flashT = 0.1f;
         knockV = ((Vector2)transform.position - from).normalized * (kind == 2 ? 3f : 6f);   // brutes resist knockback
@@ -115,6 +152,7 @@ public class Enemy : MonoBehaviour
         FloatingText.Spawn(transform.position, Mathf.RoundToInt(d).ToString(), new Color(1f, 0.95f, 0.7f), elite ? 17f : 14f);
         if (hp <= 0f)
         {
+            if (kind == 3) { Detonate(); return; }   // killing a bomber sets it off (kamikaze)
             CameraFollow.Kick(elite ? 0.2f : 0.12f);
             if (minion)
             {
