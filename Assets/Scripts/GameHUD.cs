@@ -47,7 +47,7 @@ public class GameHUD : MonoBehaviour
             ts.fontSize = 15;
             GUI.color = new Color(0.82f, 0.84f, 0.92f);
             GUI.Label(new Rect(0, Screen.height / 2f - 28f, Screen.width, 24f), "Climb the tower · beat or bribe each gatekeeper · reach the Crown", ts);
-            GUI.Label(new Rect(0, Screen.height / 2f + 2f, Screen.width, 24f), "WASD move · Space/LMB melee · RMB/Q ranged · Shift dash", ts);
+            GUI.Label(new Rect(0, Screen.height / 2f + 2f, Screen.width, 24f), "WASD move · Space/LMB melee · RMB/Q ranged · Shift dash · F nova", ts);
             if (boot.best > 0)
             {
                 ts.fontSize = 13;
@@ -126,7 +126,7 @@ public class GameHUD : MonoBehaviour
         }
 
         GUI.Label(new Rect(12, 74, 980, 22),
-            "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD move · Space/LMB melee · RMB/Q ranged · Shift dash · R re-roll");
+            "Find the boss chamber · beat or bribe the gatekeeper · step into the portal     |     WASD move · Space/LMB melee · RMB/Q ranged · Shift dash · F nova · R re-roll");
 
         if (boot != null && boot.nearBoss)
         {
@@ -225,6 +225,7 @@ public class GameHUD : MonoBehaviour
         GUI.Label(new Rect(224, 52, 90, 18), "Coins: " + player.coins);
         Pip(322f, "DASH", player.DashReady);
         Pip(392f, "SHOT", player.RangedReady);
+        Pip(462f, "NOVA", player.NovaReady);
     }
 
     void Pip(float x, string label, float ready)

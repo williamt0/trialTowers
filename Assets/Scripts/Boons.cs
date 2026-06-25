@@ -16,6 +16,7 @@ public static class Boons
         new Boon { name = "Frenzy",    desc = "-15% attack cooldown",price = 30, apply = p => { p.atkCd *= 0.85f; } },
         new Boon { name = "Evasion",   desc = "-20% dash cooldown",  price = 20, apply = p => { p.dashCd *= 0.8f; } },
         new Boon { name = "Reach",     desc = "+0.4 attack range",   price = 25, apply = p => { p.atkRange += 0.4f; } },
+        new Boon { name = "Overcharge",desc = "-25% Nova cooldown",  price = 28, apply = p => { p.novaCd *= 0.75f; } },
     };
 
     // three distinct boon indices for one cache offering
