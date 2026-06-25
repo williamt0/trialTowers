@@ -14,6 +14,7 @@ public class Enemy : MonoBehaviour
     Transform target;
     float flashT, knockT, shootCd;
     Vector2 knockV;
+    bool elite;
 
     void Awake()
     {
@@ -31,6 +32,22 @@ public class Enemy : MonoBehaviour
         else if (k == 2)  { hp = 60f + 18f * f; speed = 1.4f; touchDmg = 20f + 4f * f; transform.localScale = new Vector3(1.3f, 1.3f, 1f); }  // brute
         else              { hp = 25f + 8f * f;  speed = 2.5f; touchDmg = 12f + 2.5f * f; }                                           // chaser
         shootCd = Random.Range(0.5f, 1.6f);
+    }
+
+    // upgrade an already-Init'd enemy into an elite: tougher, hits harder, bigger, golden, drops more.
+    // Multiplies scale so it composes over the kind's scale (brute 1.3, others the 0.85 quad base).
+    public void MakeElite(int floorNum)
+    {
+        elite = true;
+        hp *= 2.2f;
+        touchDmg *= 1.4f;
+        speed *= 1.06f;
+        transform.localScale *= 1.45f;
+        if (sr != null)
+        {
+            baseCol = Color.Lerp(baseCol, new Color(0.96f, 0.82f, 0.28f), 0.6f);   // golden tell (Update restores to baseCol after a hit-flash)
+            sr.color = baseCol;
+        }
     }
 
     void Update()
@@ -87,10 +104,11 @@ public class Enemy : MonoBehaviour
         hp -= d;
         if (hp <= 0f)
         {
-            CameraFollow.Kick(0.12f);
-            Pickup.Spawn(transform.parent, transform.position, 0, kind == 2 ? 10 : 5, new Color(0.95f, 0.8f, 0.3f));   // coin orb
-            if (Random.value < 0.3f)
-                Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb
+            CameraFollow.Kick(elite ? 0.2f : 0.12f);
+            int coin = (kind == 2 ? 10 : 5) + (elite ? 15 : 0);
+            Pickup.Spawn(transform.parent, transform.position, 0, coin, new Color(0.95f, 0.8f, 0.3f));   // coin orb (elites pay more)
+            if (elite || Random.value < 0.3f)
+                Pickup.Spawn(transform.parent, (Vector2)transform.position + Vector2.right * 0.5f, elite ? 35 : 20, 0, new Color(0.4f, 0.9f, 0.5f));   // health orb (guaranteed from elites)
             Destroy(gameObject);
         }
     }

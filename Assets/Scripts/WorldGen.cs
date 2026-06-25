@@ -80,8 +80,13 @@ public static class WorldGen
         cand.RemoveAll(c => Vector2.Distance(c, entrance) < 9f || (Mathf.Abs(c.x) < 4f && Mathf.Abs(c.y) < 3.5f));        // not on the entrance, not in the vault
         for (int i = cand.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); var t = cand[i]; cand[i] = cand[j]; cand[j] = t; }   // shuffle
         int count = Mathf.Min(Mathf.Clamp(6 + floorNum, 6, 18), cand.Count);
+        int eliteCap = Mathf.Clamp(floorNum / 3, 0, 4);   // 0 on floors 1-2, ramps to 4; caps a hot-RNG all-elite floor
+        int elites = 0;
         for (int i = 0; i < count; i++)
-            SpawnEnemy(root, player, cand[i], realm.enemy, floorNum, RollKind(floorNum));
+        {
+            var en = SpawnEnemy(root, player, cand[i], realm.enemy, floorNum, RollKind(floorNum));
+            if (elites < eliteCap && RollElite(floorNum)) { en.MakeElite(floorNum); elites++; }
+        }
 
         // scorched-ground hazards thicken with depth (player-only DoT; alleys stay walkable around them)
         int hazards = floorNum >= 4 ? Mathf.Min(1 + (floorNum - 4) / 2, 4) : 0;
@@ -195,7 +200,13 @@ public static class WorldGen
         return 0;
     }
 
-    static void SpawnEnemy(Transform root, Transform player, Vector2 pos, Color col, int floorNum, int kind)
+    // elite chance climbs with depth (the per-floor cap in Generate bounds how many actually upgrade)
+    static bool RollElite(int floorNum)
+    {
+        return Random.value < Mathf.Min(0.08f + 0.03f * floorNum, 0.35f);
+    }
+
+    static Enemy SpawnEnemy(Transform root, Transform player, Vector2 pos, Color col, int floorNum, int kind)
     {
         var go = SpriteFactory.Quad("Enemy", pos, new Vector2(0.85f, 0.85f), col, 8);
         go.transform.SetParent(root);
@@ -203,6 +214,8 @@ public static class WorldGen
         rb.gravityScale = 0f;
         rb.freezeRotation = true;
         go.AddComponent<BoxCollider2D>();
-        go.AddComponent<Enemy>().Init(player, floorNum, kind);
+        var en = go.AddComponent<Enemy>();
+        en.Init(player, floorNum, kind);
+        return en;
     }
 }
