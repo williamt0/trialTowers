@@ -14,7 +14,7 @@ public class Player : MonoBehaviour
 
     Rigidbody2D rb;
     Vector2 face = Vector2.down;
-    float cd, iframe, knockT, dashT, dashCdT, rangedCdT;
+    float cd, iframe, knockT, dashT, dashCdT, rangedCdT, burnCd;
     Vector2 knockV, dashDir;
 
     void Awake()
@@ -29,6 +29,7 @@ public class Player : MonoBehaviour
         if (hurtFlash > 0f) hurtFlash -= Time.deltaTime;
         if (dashCdT > 0f) dashCdT -= Time.deltaTime;
         if (rangedCdT > 0f) rangedCdT -= Time.deltaTime;
+        if (burnCd > 0f) burnCd -= Time.deltaTime;
         if (dead || !Bootstrap.InputReady || Bootstrap.Paused) return;
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && cd <= 0f)
             Attack();
@@ -75,6 +76,20 @@ public class Player : MonoBehaviour
         rangedCdT = rangedCd;
         Vector2 dir = (face.sqrMagnitude > 0.01f ? face : Vector2.down).normalized;
         Projectile.Spawn(Bootstrap.WorldRoot, rb.position + dir * 0.7f, dir * 12f, rangedDmg, new Color(0.55f, 0.9f, 1f), true);   // friendly shot
+    }
+
+    // environmental DoT (hazards): no knockback / camera kick / i-frame interaction, just a gated HP pulse
+    public void Burn(float d)
+    {
+        if (dead || burnCd > 0f) return;
+        burnCd = 0.45f;
+        hp = Mathf.Max(0f, hp - d);
+        hurtFlash = Mathf.Max(hurtFlash, 0.25f);
+        if (hp <= 0f)
+        {
+            dead = true;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+        }
     }
 
     public void Hurt(float d, Vector2 from)

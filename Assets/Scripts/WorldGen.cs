@@ -76,6 +76,17 @@ public static class WorldGen
         for (int i = 0; i < count; i++)
             SpawnEnemy(root, player, cand[i], realm.enemy, floorNum, RollKind(floorNum));
 
+        // scorched-ground hazards thicken with depth (player-only DoT; alleys stay walkable around them)
+        int hazards = floorNum >= 4 ? Mathf.Min(1 + (floorNum - 4) / 2, 4) : 0;
+        for (int i = 0; i < hazards; i++)
+        {
+            float hx, hy;
+            if (Random.value < 0.5f) { hx = Random.value < 0.5f ? ax1 : ax2; hy = Random.Range(-ay, ay); }   // a vertical lane
+            else { hx = Random.Range(-16f, 24f); hy = 0f; }                                                  // the central spine
+            if (Mathf.Abs(hx) < 4.5f && Mathf.Abs(hy) < 4.5f) hx += 9f;                                      // keep off the central vault
+            Hazard(root, new Vector2(hx, hy), Random.Range(2.6f, 3.6f));
+        }
+
         return new Vector2(-HW + 5f, 0f);   // west-edge entrance
     }
 
@@ -147,6 +158,13 @@ public static class WorldGen
         brb.freezeRotation = true;
         bossGo.AddComponent<BoxCollider2D>();
         bossGo.AddComponent<Boss>().Init(player, portal, floorNum);
+    }
+
+    static void Hazard(Transform root, Vector2 pos, float size)
+    {
+        var go = SpriteFactory.Quad("Hazard", pos, new Vector2(size, size), new Color(0.72f, 0.24f, 0.1f), -2);   // above road, below walls
+        go.transform.SetParent(root);
+        go.AddComponent<Hazard>();
     }
 
     // archetype roll: deeper floors lean harder on ranged kiters and brutes (0 chaser, 1 ranged, 2 brute)
