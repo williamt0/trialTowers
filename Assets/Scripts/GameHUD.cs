@@ -8,6 +8,16 @@ public class GameHUD : MonoBehaviour
     public Bootstrap boot;
     public int floor = 1;
 
+    const float BannerDur = 2.6f;
+    int lastFloor;          // 0 so the first floor (1) also triggers the intro banner
+    float bannerT;
+
+    void Update()
+    {
+        if (floor != lastFloor) { lastFloor = floor; bannerT = BannerDur; }   // new floor reached -> play the intro
+        if (bannerT > 0f) bannerT -= Time.deltaTime;
+    }
+
     void OnGUI()
     {
         if (!Bootstrap.InputReady)
@@ -95,6 +105,28 @@ public class GameHUD : MonoBehaviour
         }
 
         BossBar();
+        FloorBanner();
+    }
+
+    // a brief act / floor / realm card that fades in and out on arrival at a new floor
+    void FloorBanner()
+    {
+        if (bannerT <= 0f) return;
+        float a = Mathf.Clamp01(Mathf.Min(bannerT / 0.6f, (BannerDur - bannerT) / 0.4f));   // fade in 0.4s, hold, fade out 0.6s
+        var realm = Realms.For(floor);
+        var cs = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+        float cy = Screen.height * 0.34f;
+
+        cs.fontSize = 16;
+        GUI.color = new Color(0.85f, 0.78f, 0.55f, a);
+        GUI.Label(new Rect(0, cy - 34f, Screen.width, 22f), Realms.ActLabel(floor), cs);
+        cs.fontSize = 34;
+        GUI.color = new Color(0.96f, 0.93f, 0.85f, a);
+        GUI.Label(new Rect(0, cy, Screen.width, 46f), "FLOOR " + floor, cs);
+        cs.fontSize = 18;
+        GUI.color = new Color(0.8f, 0.85f, 0.95f, a);
+        GUI.Label(new Rect(0, cy + 46f, Screen.width, 26f), realm.name, cs);
+        GUI.color = Color.white;
     }
 
     // a top-centre health bar for the gatekeeper once the fight is on (Unity == treats a destroyed boss as null)
