@@ -42,9 +42,16 @@ public class GameHUD : MonoBehaviour
             GUI.color = new Color(0.82f, 0.84f, 0.92f);
             GUI.Label(new Rect(0, Screen.height / 2f - 28f, Screen.width, 24f), "Climb the tower · beat or bribe each gatekeeper · reach the Crown", ts);
             GUI.Label(new Rect(0, Screen.height / 2f + 2f, Screen.width, 24f), "WASD move · Space/LMB melee · RMB/Q ranged · Shift dash", ts);
+            if (boot.best > 0)
+            {
+                ts.fontSize = 13;
+                GUI.color = new Color(0.7f, 0.74f, 0.82f);
+                GUI.Label(new Rect(0, Screen.height / 2f + 30f, Screen.width, 22f),
+                    boot.best >= Bootstrap.FinalFloor ? "Best: the Crown — cleared" : "Best depth: Floor " + boot.best, ts);
+            }
             ts.fontSize = 17;
             GUI.color = new Color(1f, 0.92f, 0.6f, 0.55f + 0.45f * Mathf.PingPong(Time.unscaledTime * 1.8f, 1f));   // pulse (unscaled — timeScale is 0)
-            GUI.Label(new Rect(0, Screen.height / 2f + 46f, Screen.width, 28f), "Press Space to begin", ts);
+            GUI.Label(new Rect(0, Screen.height / 2f + 56f, Screen.width, 28f), "Press Space to begin", ts);
             GUI.color = Color.white;
             return;
         }
@@ -86,7 +93,8 @@ public class GameHUD : MonoBehaviour
         if (player.dead)
         {
             GUI.color = new Color(1f, 0.6f, 0.6f);
-            GUI.Label(new Rect(12, 74, 600, 22), "YOU DIED — press R to re-roll the floor.");
+            GUI.Label(new Rect(12, 74, 700, 22), "YOU DIED — press R to re-roll the floor."
+                + (boot != null && boot.best > 0 ? "      Best depth: Floor " + boot.best : ""));
             GUI.color = Color.white;
             return;
         }

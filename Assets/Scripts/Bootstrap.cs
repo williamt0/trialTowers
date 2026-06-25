@@ -23,6 +23,7 @@ public class Bootstrap : MonoBehaviour
 
     public const int FinalFloor = 10;   // Tower's Crown — beating its gatekeeper wins the run
     public int floorNum = 1;
+    public int best;     // deepest floor ever reached, persisted across runs (PlayerPrefs)
     public bool won;
     public bool title;   // opens on a frozen title screen until the player presses Space
 
@@ -47,6 +48,8 @@ public class Bootstrap : MonoBehaviour
     {
         try { Input.GetKey(KeyCode.Space); InputReady = true; }
         catch { InputReady = false; }
+
+        best = PlayerPrefs.GetInt("tt_best", 0);
 
         Physics2D.gravity = Vector2.zero;
 
@@ -211,6 +214,13 @@ public class Bootstrap : MonoBehaviour
             player.dead = false;
         }
         if (hud != null) hud.floor = floorNum;
+
+        if (floorNum > best)   // record the new deepest floor reached
+        {
+            best = floorNum;
+            PlayerPrefs.SetInt("tt_best", best);
+            PlayerPrefs.Save();
+        }
     }
 
     Player MakePlayer()
